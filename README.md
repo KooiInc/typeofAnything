@@ -58,4 +58,4 @@ IS(null, null); //=> true
 IS(/[a-z]/gi, RegExp); //=> true
 ```
 
-For a more extensive example see this [Stackblitz project](https://stackblitz.com/edit/js-a1ggb3?file=index.js).
+For a more comprehensive example see this [Stackblitz project](https://stackblitz.com/edit/js-a1ggb3?file=index.js).
