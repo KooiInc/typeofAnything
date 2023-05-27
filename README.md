@@ -47,8 +47,11 @@ Subsequently use `window.IS` in you script
 
 ```javascript
 // assume the function is imported as IS
+const showMeMyType = something => IS(something)
 const someObj = {a: 1, b: `hello`, c: `world`};
+const wMap = new WeakMap();
 IS(someObj); // => Object
+showMeMyType(wMap); // => WeakMap
 IS(someObj, Object); // => true
 IS(someObj, Array, String); // => false
 IS(someObj, Symbol, String, RegExp, Object); // => true
