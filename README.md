@@ -1,9 +1,11 @@
 # typeofAnything
 
 Ecmascript can be a bitch when it comes to (determining) the type of variables. Sometimes `typeof`/`instanceof`/`constructor` etc. will 
-just not give the right results.
+just not give the right results. On the other hand I don't want to abandon dynamic typing, it offers that much more than static typing 
+(so, no typescript here).
 
-This little module/library tries to provide a function to determine a type more extensively. It is available as an (importable) module or a browser script.
+So I created this little module/library. It tries to provide a function to determine a type more extensively. 
+It is available as an (importable) module or as a browser script.
 
 ## Import the module
 
