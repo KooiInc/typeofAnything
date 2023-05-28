@@ -40,18 +40,18 @@ Subsequently use `window.IS` in you script
 
 ## Syntax
 
-`[imported IS function](anything, [...types])`
+`[imported IS function](anything, [...type])`
 
 ## Return value
 
-The method returns either a boolean (`anyting` is (one of) `[...type]`) 
-or a string representation of the found "type" (may also be `null`, `NaN` or `undefined`).
+The method returns either a boolean (`anything` is/is not (one of) `[...type]`) 
+or a string representation of the found 'type' (may also be `null`, `NaN` or `undefined`).
 
 For checking is `anything` is (one of) `[...type]`, the level of specificity is
 up to the prototype of `anything` (when it is found). For example
 
 - `IS(document.createElement("div"), HTMLDivElement)`
-*and* `IS(document.createElement("div"), HTMLDivElement)` are both true, but
+*and* `IS(document.createElement("div"), HTMLElement)` are both true, but
 `IS(document.createElement("div"), Node)` will be false. 
 - `IS(Array, Object)` will be false, `IS(Array, Array)` true. 
 
