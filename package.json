@@ -2,7 +2,11 @@
   "name": "typeofanything",
   "version": "1.0.0",
   "description": "Ecmascript: determine or check the type of any variable",
-  "main": "typeofany.browser.js",
+  "main": "typeofany.module.js",
+  "exports": {
+    "import": "typeofany.module.js",
+    "browser": "typeofany.browser.js"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
