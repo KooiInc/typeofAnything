@@ -25,8 +25,7 @@ function IS(obj, ...shouldBe) {
             ? {name: `${objOrSymbol}`} : Object.getPrototypeOf(obj)?.constructor;
 
       return shouldBe
-        ? objOrSymbol instanceof shouldBe ||
-          shouldBe === self?.__proto__ ||
+        ? shouldBe === self?.__proto__ ||
           shouldBe === self ||
           `${shouldBe}` === self?.name
         : self?.name;
