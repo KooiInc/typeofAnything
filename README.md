@@ -11,23 +11,25 @@ The code is available as an (importable) module or as a browser script.
 
 ## Import the module
 
-Your script should be of type `module` (`<script type="module">`).
+Your script should be of type `module`.
 
-Within that script import using
-
-`import IS from "kooiinc.github.io/typeofAnything/typeofany.module.js";`
-
-or 
-
-`const IS = (await import("kooiinc.github.io/typeofAnything/typeofany.module.js")).default;`
+```html
+<script type="module">
+  import IS from "https://kooiinc.github.io/typeofAnything/typeofany.module.js";
+  // or 
+  const IS = (await import("https://kooiinc.github.io/typeofAnything/typeofany.module.js")).default;
+</script>
+```
 
 ## Use in browser
 
 Create a script tag in your html:
 
-`<script src="kooiinc.github.io/typeofAnything/typeofany.module.js"`)</script>`
+```html
+<script src="https://kooiinc.github.io/typeofAnything/typeofany.browser.js"`)</script>
+```
 
-Subsequently use `window.IS` in you script
+Subsequently use `window.IS` in your script
 
 ```html
 <script>
