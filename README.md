@@ -47,7 +47,7 @@ Subsequently use `window.IS` in you script
 The method returns either a boolean (`anything` is/is not (one of) `[...type]`) 
 or a string representation of the found 'type' (may also be `null`, `NaN` or `undefined`).
 
-For checking is `anything` is (one of) `[...type]`, the level of specificity is
+For checking if `anything` is (one of) `[...type]`, the level of specificity is
 up to the prototype of `anything` (when it is found). For example
 
 - `IS(document.createElement("div"), HTMLDivElement)`
