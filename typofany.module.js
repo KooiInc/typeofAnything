@@ -14,20 +14,21 @@ function IS(obj, ...shouldBe) {
 
     return shouldBeIsNothing
       ? `${objOrSymbol}` === `${shouldBe}` :
-        obj === false
+      obj === false
         ? shouldBe === Boolean ? true : `Boolean` :
-          thisIs()
+        thisIs()
 
     function thisIs() {
-      const self = obj === 0 
-        ? Number : obj === `` 
-          ? String : !objOrSymbol 
+      const self = obj === 0
+        ? Number : obj === ``
+          ? String : !objOrSymbol
             ? {name: `${objOrSymbol}`} : Object.getPrototypeOf(obj)?.constructor;
 
-      return shouldBe 
-        ? shouldBe === self?.__proto__ ||
+      return shouldBe
+        ? objOrSymbol instanceof shouldBe ||
+          shouldBe === self?.__proto__ ||
           shouldBe === self ||
-          `${shouldBe}` === self?.name 
+          `${shouldBe}` === self?.name
         : self?.name;
     }
   }
@@ -44,5 +45,5 @@ function IS(obj, ...shouldBe) {
       if (IS(obj, param))  { return true; }
     }
     return false;
-  } 
+  }
 }
