@@ -5,7 +5,7 @@ just not give the right results. On the other hand I don't want to abandon dynam
 (so, *no typescript here*). On the other hand, there are moments where I want to be more certain that a variable is of the type I actually 
 need (e.g in my [JQL](https://github.com/KooiInc/JQL) library).
 
-So I created this little module/library. It tries to provide a function to determine a type of anything your throw at it. 
+So I created this little module/library. It tries to provide a function to determine a type of anything your throw at it.
 
 The code is available as an (importable) module or as a browser script.
 
@@ -42,6 +42,18 @@ Subsequently use `window.IS` in you script
 
 `[imported IS function](anything, [...types])`
 
+## Return value
+
+The method returns either a boolean (`anyting` is (one of) `[...type]`) 
+or a string representation of the found "type" (may also be `null`, `NaN` or `undefined`).
+
+For checking is `anything` is (one of) `[...type]`, the level of specificity is
+up to the prototype of `anything` (when it is found). For example
+
+- `IS(document.createElement("div"), HTMLDivElement)`
+*and* `IS(document.createElement("div"), HTMLDivElement)` are both true, but
+`IS(document.createElement("div"), Node)` will be false. 
+- `IS(Array, Object)` will be false, `IS(Array, Array)` true. 
 
 ## Examples
 
