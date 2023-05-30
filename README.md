@@ -7,7 +7,7 @@ need (e.g in my [JQL](https://github.com/KooiInc/JQL) library).
 
 So I created this little module/library. It tries to provide a function to determine a type of anything your throw at it.
 
-The code is available as an (importable) module or as a browser script.
+The code is available as an (importable) module, as a browser script and from [NPM](https://www.npmjs.com/package/typeofanything).
 
 ## Import the module
 
