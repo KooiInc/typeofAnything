@@ -1,7 +1,6 @@
 export default IS;
 
 function IS(obj, ...shouldBe) {
-  const undefs = [`NaN`, `null`, `undefined`];
   const maybeSymbol = something => typeof something === `symbol` ? Symbol : something;
 
   return shouldBe.length > 1 ? ISOneOf(obj, ...shouldBe) : determineType();
@@ -14,15 +13,15 @@ function IS(obj, ...shouldBe) {
     const shouldBeIsNothing = shouldBeLen && isNothing(shouldBe);
 
     if (inputIsNothing || shouldBeIsNothing) {
-      return shouldBeIsNothing 
-        ? `${objOrSymbol}` === `${shouldBe}` 
-        : !shouldBe 
+      return shouldBeIsNothing
+        ? `${objOrSymbol}` === `${shouldBe}`
+        : !shouldBe
           ? `${objOrSymbol}` : false;
     }
 
     if (Object.getPrototypeOf(objOrSymbol)?.constructor === Boolean) {
-      return !shouldBe 
-        ? `Boolean` 
+      return !shouldBe
+        ? `Boolean`
         : Object.getPrototypeOf(objOrSymbol).constructor === shouldBe;
     }
 
@@ -43,10 +42,11 @@ function IS(obj, ...shouldBe) {
   }
 
   function isNothing(nothing) {
-    for (let nada of undefs) {
-      if (nada === `${nothing}`) { return true; }
+    try {
+      return /^(undefined|NaN|null)$/.test(`${nothing}`);
+    } catch(e) {
+      return false;
     }
-    return false;
   }
 
   function ISOneOf(obj, ...params) {
