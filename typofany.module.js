@@ -42,7 +42,7 @@ function IS(obj, ...shouldBe) {
         ? instanceOf(objOrSymbol, shouldBe) ||
         shouldBe === self ||
         shouldBe === Object.getPrototypeOf(self) ||
-        `${shouldBe}` === self?.name
+        `${shouldBe?.name}` === self?.name
         : self?.name;
     }
   }
