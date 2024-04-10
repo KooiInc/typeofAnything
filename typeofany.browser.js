@@ -27,6 +27,11 @@ function IS(obj, ...shouldBe) {
     
     return thisIs();
     
+    function instanceOf(obj, should) {
+      try { return obj instanceof should ? true : false; }
+      catch(e) { return false;}
+    }
+    
     function thisIs() {
       const self = obj === 0
         ? Number : obj === ``
@@ -34,9 +39,10 @@ function IS(obj, ...shouldBe) {
             ? {name: `${objOrSymbol}`} : Object.getPrototypeOf(obj)?.constructor;
       
       return shouldBe
-        ? shouldBe === self ||
+        ? instanceOf(objOrSymbol, shouldBe) ||
+        shouldBe === self ||
         shouldBe === Object.getPrototypeOf(self) ||
-        `${shouldBe}` === self?.name
+        `${shouldBe?.name}` === self?.name
         : self?.name;
     }
   }
