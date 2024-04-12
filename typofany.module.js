@@ -1,8 +1,12 @@
-export {IS as default, maybe};
+export {IS as default, maybe, typeOf};
 
 function IS(anything, ...shouldBe) {
   const input =  typeof anything === `symbol` ? Symbol('any') : anything;
   return shouldBe.length > 1 ? ISOneOf(input, ...shouldBe) : determineType(input, ...shouldBe);
+}
+
+function typeOf(anything) {
+  return IS(anything);
 }
 
 function determineType(input, ...shouldBe) {
