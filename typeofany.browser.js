@@ -1,6 +1,6 @@
-window.IS = IS;
-window.typeOf = typeOf;
-window.maybe = maybe;
+window.typeofAny = { IS, typeOf, maybe, createWrappedProxy };
+
+const proxySymbol = Symbol.for('proxied');
 
 function IS(anything, ...shouldBe) {
   const input =  typeof anything === `symbol` ? Symbol('any') : anything;
@@ -8,6 +8,10 @@ function IS(anything, ...shouldBe) {
 }
 
 function typeOf(anything) {
+  if (anything?.[proxySymbol]) {
+    return 'Proxy';
+  }
+  
   return IS(anything);
 }
 
@@ -52,7 +56,11 @@ function getVariables(input, ...shouldBe) {
   return { compareWith, inputIsNothing, shouldBeIsNothing, inputCTOR, is_NAN };
 }
 
-function getResult(input, shouldBe, self) {
+function getResult(input, shouldBe, me) {
+  if (input[proxySymbol] && shouldBe === Proxy) {
+    return shouldBe === Proxy;
+  }
+  
   if (maybe({trial:  _ => String(shouldBe), whenError: _ => `-`}) === `NaN`) {
     return String(input) === `NaN`;
   }
@@ -61,10 +69,10 @@ function getResult(input, shouldBe, self) {
     ? maybe({
       trial: _ => !!(input instanceof shouldBe),
       whenError: _ => false } ) ||
-    shouldBe === self ||
-    shouldBe === Object.getPrototypeOf(self) ||
-    `${shouldBe?.name}` === self?.name
-    : self?.name;
+    shouldBe === me ||
+    shouldBe === Object.getPrototypeOf(me) ||
+    `${shouldBe?.name}` === me?.name
+    : me?.name;
 }
 
 function ISOneOf(obj, ...params) {
@@ -82,9 +90,20 @@ function isNothing(maybeNothing) {
 
 function maybe({trial, whenError = err => console.log(err) } = {}) {
   if (!trial || !(trial instanceof Function)) {
-    console.info(`[maybe.trial] must be a Function or Lambda`);
+    console.info(`TypeofAnything {maybe}: trial parameter not a Function or Lambda`);
     return false;
   }
   
   try { return trial(); } catch(err) { return whenError(err); }
+}
+
+function createWrappedProxy(fromObj, traps) {
+  const originalGetterTrap = traps.get ?? function(target, key) { return target[key]; };
+  traps.get = function(target, key) {
+    return !(key in target)
+      ? `Proxy`
+      : originalGetterTrap(target, key);
+  };
+  fromObj[proxySymbol] = true;
+  return new Proxy(fromObj, traps);
 }
