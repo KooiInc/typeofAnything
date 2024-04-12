@@ -1,4 +1,4 @@
-window.typeofAny = { IS, typeOf, maybe, createWrappedProxy };
+window.typeofAny = { IS, typeOf, maybe, createWrappedProxy, extendObject: createWrappedProxy };
 
 const proxySymbol = Symbol.for('proxied');
 
@@ -106,4 +106,47 @@ function createWrappedProxy(fromObj, traps) {
   };
   fromObj[proxySymbol] = true;
   return new Proxy(fromObj, traps);
+}
+
+function addSymbols2Object({is = `is`, type = `type`} = {}) {
+  //                       ^ Note: can be different Symbol names
+  const isSymbol = Symbol(`toa.${is}`);
+  const typeSymbol = Symbol(`toa.${type}`);
+  
+  // static methods for Object
+  // Object[is]/[type] can be used for null/undefined
+  Object[typeSymbol] = typeOf;
+  Object[isSymbol] = function(anything, ...args) {
+    return maybe( {
+      trial: _ => {
+        if (args.length < 1) { throw new TypeError(`nothing to compare to!`); }
+        
+        return IS(anything, ...args);
+      },
+      whenError: err => {
+        console.error(`[Object.isTypeOf] for input ${anything} (type: ${typeOf(anything)})\n  ${err.stack}`);
+        return false;
+      }
+    });
+  };
+  
+  function $X(someObj) {
+    return  Object.freeze( {
+      get [typeSymbol]() { return typeOf(someObj); },
+      [isSymbol](...args) { return IS(someObj, ...args); }
+    });
+  }
+  
+  if (!Object.getOwnPropertyDescriptors(Object.prototype)[isSymbol]) {
+    Object.defineProperties(Object.prototype, {
+      [typeSymbol]: { get() { return typeOf(this); }, enumerable: true },
+      [isSymbol]: { value: function(...args) { return IS(this, ...args); }, enumerable: true },
+    });
+  }
+  
+  return {
+    $X,
+    get is() { return isSymbol; },
+    get type() { return typeSymbol; },
+  };
 }
