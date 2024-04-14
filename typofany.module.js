@@ -19,8 +19,9 @@ function determineType(input, ...shouldBe) {
   let { compareWith, inputIsNothing, shouldBeIsNothing, inputCTOR, is_NAN } = getVariables(input, ...shouldBe);
   
   if (is_NAN && compareWith) {
-    compareWith = maybe({trial:  _ => String(compareWith), whenError: _ => ``});
-    return compareWith === String(input) || shouldBe === Number;
+    return maybe({
+      trial:  _ => String(compareWith),
+      whenError: _ => `-`}) === String(input);
   }
   
   if (inputIsNothing || shouldBeIsNothing) {
@@ -114,7 +115,6 @@ function addSymbols2Object({is = `is`, type = `type`} = {}) {
   const typeSymbol = Symbol(`toa.${type}`);
   
   // static methods for Object
-  // Object[is]/[type] can be used for null/undefined
   Object[typeSymbol] = typeOf;
   Object[isSymbol] = function(anything, ...args) {
     return maybe( {
@@ -130,7 +130,7 @@ function addSymbols2Object({is = `is`, type = `type`} = {}) {
     });
   };
   
-  function $X(someObj) {
+  function wrap4TypeCheck(someObj) {
     return  Object.freeze( {
       get [typeSymbol]() { return typeOf(someObj); },
       [isSymbol](...args) { return IS(someObj, ...args); }
@@ -145,7 +145,7 @@ function addSymbols2Object({is = `is`, type = `type`} = {}) {
   }
   
   return {
-    $X,
+    $T: wrap4TypeCheck,
     get is() { return isSymbol; },
     get type() { return typeSymbol; },
   };
