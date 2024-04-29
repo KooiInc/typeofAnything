@@ -1,4 +1,4 @@
-export { IS as default, maybe, typeOf, createWrappedProxy, addSymbols2Object as extendObject };
+export {IS as default, maybe, typeOf, createWrappedProxy, addSymbols2Object as extendObject};
 
 const proxySymbol = Symbol.for('proxied');
 
@@ -18,17 +18,17 @@ function typeOf(anything) {
 function determineType(input, ...shouldBe) {
   let { compareWith, inputIsNothing, shouldBeIsNothing, inputCTOR, is_NAN } = getVariables(input, ...shouldBe);
   
-  if (is_NAN && compareWith) {
-    return maybe({
-      trial:  _ => String(compareWith),
-      whenError: _ => `-`}) === String(input);
+  if (is_NAN) {
+    return compareWith
+      ? maybe({trial:  _ => String(compareWith), whenError: _ => `-`}) === String(input)
+      : `NaN`
   }
   
   if (inputIsNothing || shouldBeIsNothing) {
     return shouldBeIsNothing
       ? String(input) === String(compareWith)
       : !compareWith
-        ? `${input}`
+        ? String(input)
         : false;
   }
   
@@ -52,7 +52,7 @@ function getVariables(input, ...shouldBe) {
   const inputIsNothing = isNothing(input);
   const shouldBeIsNothing = sbLen && isNothing(compareWith);
   const inputCTOR = !inputIsNothing && Object.getPrototypeOf(input)?.constructor;
-  const is_NAN = maybe({trial: _ => String(input), whenError: _ => ``}) === `NaN`;
+  const is_NAN = maybe({trial: _ => String(input), whenError: _ => `-`}) === `NaN`;
   
   return { compareWith, inputIsNothing, shouldBeIsNothing, inputCTOR, is_NAN };
 }
@@ -111,10 +111,12 @@ function createWrappedProxy(fromObj, traps) {
 
 function addSymbols2Object({is = `is`, type = `type`} = {}) {
   //                       ^ Note: can be different Symbol names
+  
   const isSymbol = Symbol(`toa.${is}`);
   const typeSymbol = Symbol(`toa.${type}`);
   
   // static methods for Object
+  // Object[is]/[type] can be used for null/undefined
   Object[typeSymbol] = typeOf;
   Object[isSymbol] = function(anything, ...args) {
     return maybe( {
@@ -128,12 +130,14 @@ function addSymbols2Object({is = `is`, type = `type`} = {}) {
         return false;
       }
     });
-  };
+  }
   
-  function wrap4TypeCheck(someObj) {
+  function $X(someObj) {
     return  Object.freeze( {
-      get [typeSymbol]() { return typeOf(someObj); },
-      [isSymbol](...args) { return IS(someObj, ...args); }
+      get [typeSymbol]() { return typeOf(someObj)},
+      get type() { return typeOf(someObj)},
+      [isSymbol](...args) { return IS(someObj, ...args); },
+      is(...args) { return IS(someObj, ...args); }
     });
   }
   
@@ -145,7 +149,8 @@ function addSymbols2Object({is = `is`, type = `type`} = {}) {
   }
   
   return {
-    $T: wrap4TypeCheck,
+    // $X or Object[is]/[type] can be used for null/undefined
+    $X,
     get is() { return isSymbol; },
     get type() { return typeSymbol; },
   };
