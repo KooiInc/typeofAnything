@@ -1,3 +1,9 @@
+/**
+ * Note: typofany.module.js was a typo
+ * Please use typEofany.module.js
+ * The file is maintained for now for backward compatibility
+ * but may be deleted later on.
+ */
 export {IS as default, maybe, typeOf, createWrappedProxy, addSymbols2Object as extendObject};
 
 const proxySymbol = Symbol.for('proxied');
