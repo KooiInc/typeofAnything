@@ -1,4 +1,4 @@
-window.typeofAny = { IS, typeOf, maybe, createWrappedProxy, extendObject: createWrappedProxy };
+window.typeofAny = {IS, maybe, typeOf, createWrappedProxy, extendObject: addSymbols2Object};
 
 const proxySymbol = Symbol.for('proxied');
 
