@@ -1,4 +1,4 @@
-const { IS, maybe, typeOf, createWrappedProxy, extendObject, } = TOAFActory();
+const { IS, maybe, typeOf, createWrappedProxy, extendObject, } = TOAFactory();
 
 function TOAFactory() {
   const proxySymbol = Symbol.for('proxied');
