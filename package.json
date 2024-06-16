@@ -1,6 +1,6 @@
 {
   "name": "typeofanything",
-  "version": "1.1.7",
+  "version": "1.1.8",
   "description": "Ecmascript: determine or check the type of any variable",
   "main": "./typeofany.module.js",
   "browser": "./typeofany.browser.js",
