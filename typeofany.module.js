@@ -139,52 +139,48 @@ function TOAFactory() {
   function $XFactory(isSymbol, typeSymbol) {
     return function (someObj) {
       return Object.freeze({
-        get [typeSymbol]() {
-          return typeOf(someObj);
-        },
-        get type() {
-          return typeOf(someObj);
-        },
-        [isSymbol](...args) {
-          return IS(someObj, ...args);
-        },
-        is(...args) {
-          return IS(someObj, ...args);
-        }
+        get [typeSymbol]() { return typeOf(someObj); },
+        get type() { return typeOf(someObj); },
+        [isSymbol](...args) { return IS(someObj, ...args); },
+        is(...args) { return IS(someObj, ...args); }
       });
     }
   }
   
   function addSymbols2Object({is = `is`, type = `type`} = {}) {
-    //                       ^ Note: can be different Symbol names
     const isSymbol = Symbol(`toa.${is}`);
     const typeSymbol = Symbol(`toa.${type}`);
     
+    // prototypal
     if (!Object.getOwnPropertyDescriptors(Object.prototype)[isSymbol]) {
       Object.defineProperties(Object.prototype, {
         [typeSymbol]: {
-          get() {
-            return typeOf(this);
-          }, enumerable: true
+          get() { return typeOf(this); },
+          enumerable: true,
         },
         [isSymbol]: {
-          value: function (...args) {
-            return IS(this, ...args);
-          }, enumerable: true
+          value: function (...args) { return IS(this, ...args); },
+          enumerable: true,
+        },
+      });
+      
+      // static
+      Object.defineProperties(Object, {
+        [typeSymbol]: {
+          value(obj) { return typeOf(obj); },
+          enumerable: true,
+        },
+        [isSymbol]: {
+          value: function (obj, ...args) { return IS(obj, ...args); },
+          enumerable: true,
         },
       });
     }
     
     return {
-      // $X([someObject]).type/.is
-      // or Object[is]/[type] can be used for null/undefined
       $X: $XFactory(isSymbol, typeSymbol),
-      get is() {
-        return isSymbol;
-      },
-      get type() {
-        return typeSymbol;
-      },
+      get is() {  return isSymbol; },
+      get type() { return typeSymbol; },
     };
   }
 }
