@@ -22,18 +22,40 @@ Your script should be of type `module`.
 ```
 
 ## Use in browser
-
 Create a script tag in your html:
 
 ```html
 <script src="[path to]/typeofany.browser.js"`)</script>
 ```
-
-Subsequently use `IS` in your script
+Subsequently in your script (for example)
 
 ```html
 <script>
   const isObject = IS({}, Array, Object);
+  const nothing = null;
+  const {$X, is, type} = extendObject();
+  const isNothingNull = nothing?.[is](null) || $X(nothing).is(null); 
+  /* ... */
+</script>
+```
+
+## Use in browser with factory
+Create a script tag in your html:
+
+```html
+<script src="[path to]/typeofany.browser-factory.js"`)</script>
+```
+
+Subsequently in your script (for example)
+
+```html
+<script>
+  const {IS, extendObject} = TOAFactory();
+  const isObject = IS({}, Array, Object);
+  const nothing = null;
+  const {$X, is, type} = extendObject();
+  const isNothingNull = nothing?.is(null) || $X(nothing).is(null);
+  
   /* ... */
 </script>
 ```
