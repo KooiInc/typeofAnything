@@ -25,7 +25,7 @@ Your script should be of type `module`.
 Create a script tag in your html:
 
 ```html
-<script src="[path to]/typeofany.browser.js"`)</script>
+<script src="[path to]/typeofany.browser.js")</script>
 ```
 Subsequently in your script (for example)
 
@@ -43,7 +43,7 @@ Subsequently in your script (for example)
 Create a script tag in your html:
 
 ```html
-<script src="[path to]/typeofany.browser-factory.js"`)</script>
+<script src="[path to]/typeofany.browser-factory.js")</script>
 ```
 
 Subsequently in your script (for example)
