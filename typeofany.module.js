@@ -109,37 +109,21 @@ function createWrappedProxy(fromObj, traps) {
   return new Proxy(fromObj, traps);
 }
 
-function addSymbols2Object({is = `is`, type = `type`} = {}) {
-  //                       ^ Note: can be different Symbol names
-  
-  const isSymbol = Symbol(`toa.${is}`);
-  const typeSymbol = Symbol(`toa.${type}`);
-  
-  // static methods for Object
-  // Object[is]/[type] can be used for null/undefined
-  Object[typeSymbol] = typeOf;
-  Object[isSymbol] = function(anything, ...args) {
-    return maybe( {
-      trial: _ => {
-        if (args.length < 1) { throw new TypeError(`nothing to compare to!`); }
-        
-        return IS(anything, ...args);
-      },
-      whenError: err => {
-        console.error(`[Object.isTypeOf] for input ${anything} (type: ${typeOf(anything)})\n  ${err.stack}`);
-        return false;
-      }
-    });
-  }
-  
-  function $X(someObj) {
-    return  Object.freeze( {
-      get [typeSymbol]() { return typeOf(someObj)},
-      get type() { return typeOf(someObj)},
-      [isSymbol](...args) { return IS(someObj, ...args); },
+function $XFactory(isSymbol, typeSymbol) {
+  return function(someObj) {
+    return Object.freeze({
+      get [typeSymbol]() { return typeOf(someObj); },
+      get type() { return typeOf(someObj); },
+      [isSymbol](...args) {  return IS(someObj, ...args); },
       is(...args) { return IS(someObj, ...args); }
     });
   }
+}
+
+function addSymbols2Object({is = `is`, type = `type`} = {}) {
+  //                       ^ Note: can be different Symbol names
+  const isSymbol = Symbol(`toa.${is}`);
+  const typeSymbol = Symbol(`toa.${type}`);
   
   if (!Object.getOwnPropertyDescriptors(Object.prototype)[isSymbol]) {
     Object.defineProperties(Object.prototype, {
@@ -149,8 +133,9 @@ function addSymbols2Object({is = `is`, type = `type`} = {}) {
   }
   
   return {
-    // $X or Object[is]/[type] can be used for null/undefined
-    $X,
+    // $X([someObject]).type/.is
+    // or Object[is]/[type] can be used for null/undefined
+    $X: $XFactory(isSymbol, typeSymbol),
     get is() { return isSymbol; },
     get type() { return typeSymbol; },
   };

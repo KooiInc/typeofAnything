@@ -15,9 +15,9 @@ Your script should be of type `module`.
 
 ```html
 <script type="module">
-  import IS from "https://kooiinc.github.io/typeofAnything/typeofany.module.js";
+  import IS from "[path to]/typeofany.module.js";
   // or 
-  const IS = (await import("https://kooiinc.github.io/typeofAnything/typeofany.module.js")).default;
+  const IS = (await import("[path to]/typeofany.module.js")).default;
 </script>
 ```
 
@@ -26,17 +26,15 @@ Your script should be of type `module`.
 Create a script tag in your html:
 
 ```html
-<script src="https://kooiinc.github.io/typeofAnything/typeofany.browser.js"`)</script>
+<script src="[path to]/typeofany.browser.js"`)</script>
 ```
 
-Subsequently use `window.IS` in your script
+Subsequently use `IS` in your script
 
 ```html
 <script>
-  const IS = window.IS;
-  // remove from global namespace
-  delete window.IS;
-  // ...
+  const isObject = IS({}, Array, Object);
+  /* ... */
 </script>
 ```
 
