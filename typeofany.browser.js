@@ -1,6 +1,6 @@
 const { IS, maybe, typeOf, createWrappedProxy, extendObject, } = TOAFActory();
 
-function TOAFActory() {
+function TOAFactory() {
   const proxySymbol = Symbol.for('proxied');
   
   return { IS, maybe, typeOf, createWrappedProxy, extendObject: addSymbols2Object };
