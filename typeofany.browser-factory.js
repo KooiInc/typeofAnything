@@ -1,9 +1,10 @@
-function TOAFactory() {  
+function TOAFActory() {
   const proxySymbol = Symbol.for('proxied');
-  return {IS, maybe, typeOf, createWrappedProxy, extendObject: addSymbols2Object};
+  
+  return { IS, maybe, typeOf, createWrappedProxy, extendObject: addSymbols2Object };
   
   function IS(anything, ...shouldBe) {
-    const input =  typeof anything === `symbol` ? Symbol('any') : anything;
+    const input = typeof anything === `symbol` ? Symbol('any') : anything;
     return shouldBe.length > 1 ? ISOneOf(input, ...shouldBe) : determineType(input, ...shouldBe);
   }
   
@@ -16,11 +17,11 @@ function TOAFactory() {
   }
   
   function determineType(input, ...shouldBe) {
-    let { compareWith, inputIsNothing, shouldBeIsNothing, inputCTOR, is_NAN } = getVariables(input, ...shouldBe);
+    let {compareWith, inputIsNothing, shouldBeIsNothing, inputCTOR, is_NAN} = getVariables(input, ...shouldBe);
     
     if (is_NAN) {
       return compareWith
-        ? maybe({trial:  _ => String(compareWith), whenError: _ => `-`}) === String(input)
+        ? maybe({trial: _ => String(compareWith), whenError: _ => `-`}) === String(input)
         : `NaN`
     }
     
@@ -54,7 +55,7 @@ function TOAFactory() {
     const inputCTOR = !inputIsNothing && Object.getPrototypeOf(input)?.constructor;
     const is_NAN = maybe({trial: _ => String(input), whenError: _ => `-`}) === `NaN`;
     
-    return { compareWith, inputIsNothing, shouldBeIsNothing, inputCTOR, is_NAN };
+    return {compareWith, inputIsNothing, shouldBeIsNothing, inputCTOR, is_NAN};
   }
   
   function getResult(input, shouldBe, me) {
@@ -62,14 +63,15 @@ function TOAFactory() {
       return shouldBe === Proxy;
     }
     
-    if (maybe({trial:  _ => String(shouldBe), whenError: _ => `-`}) === `NaN`) {
+    if (maybe({trial: _ => String(shouldBe), whenError: _ => `-`}) === `NaN`) {
       return String(input) === `NaN`;
     }
     
     return shouldBe
       ? maybe({
         trial: _ => !!(input instanceof shouldBe),
-        whenError: _ => false } ) ||
+        whenError: _ => false
+      }) ||
       shouldBe === me ||
       shouldBe === Object.getPrototypeOf(me) ||
       `${shouldBe?.name}` === me?.name
@@ -78,7 +80,9 @@ function TOAFactory() {
   
   function ISOneOf(obj, ...params) {
     for (const param of params) {
-      if (IS(obj, param))  { return true; }
+      if (IS(obj, param)) {
+        return true;
+      }
     }
     return false;
   }
@@ -86,21 +90,28 @@ function TOAFactory() {
   function isNothing(maybeNothing) {
     return maybe({
       trial: _ => /^(undefined|null)$/.test(String(maybeNothing)),
-      whenError: _ => false });
+      whenError: _ => false
+    });
   }
   
-  function maybe({trial, whenError = err => console.log(err) } = {}) {
+  function maybe({trial, whenError = err => console.log(err)} = {}) {
     if (!trial || !(trial instanceof Function)) {
       console.info(`TypeofAnything {maybe}: trial parameter not a Function or Lambda`);
       return false;
     }
     
-    try { return trial(); } catch(err) { return whenError(err); }
+    try {
+      return trial();
+    } catch (err) {
+      return whenError(err);
+    }
   }
   
   function createWrappedProxy(fromObj, traps) {
-    const originalGetterTrap = traps.get ?? function(target, key) { return target[key]; };
-    traps.get = function(target, key) {
+    const originalGetterTrap = traps.get ?? function (target, key) {
+      return target[key];
+    };
+    traps.get = function (target, key) {
       return !(key in target)
         ? `Proxy`
         : originalGetterTrap(target, key);
@@ -110,12 +121,20 @@ function TOAFactory() {
   }
   
   function $XFactory(isSymbol, typeSymbol) {
-    return function(someObj) {
+    return function (someObj) {
       return Object.freeze({
-        get [typeSymbol]() { return typeOf(someObj); },
-        get type() { return typeOf(someObj); },
-        [isSymbol](...args) {  return IS(someObj, ...args); },
-        is(...args) { return IS(someObj, ...args); }
+        get [typeSymbol]() {
+          return typeOf(someObj);
+        },
+        get type() {
+          return typeOf(someObj);
+        },
+        [isSymbol](...args) {
+          return IS(someObj, ...args);
+        },
+        is(...args) {
+          return IS(someObj, ...args);
+        }
       });
     }
   }
@@ -127,8 +146,16 @@ function TOAFactory() {
     
     if (!Object.getOwnPropertyDescriptors(Object.prototype)[isSymbol]) {
       Object.defineProperties(Object.prototype, {
-        [typeSymbol]: { get() { return typeOf(this); }, enumerable: true },
-        [isSymbol]: { value: function(...args) { return IS(this, ...args); }, enumerable: true },
+        [typeSymbol]: {
+          get() {
+            return typeOf(this);
+          }, enumerable: true
+        },
+        [isSymbol]: {
+          value: function (...args) {
+            return IS(this, ...args);
+          }, enumerable: true
+        },
       });
     }
     
@@ -136,9 +163,12 @@ function TOAFactory() {
       // $X([someObject]).type/.is
       // or Object[is]/[type] can be used for null/undefined
       $X: $XFactory(isSymbol, typeSymbol),
-      get is() { return isSymbol; },
-      get type() { return typeSymbol; },
+      get is() {
+        return isSymbol;
+      },
+      get type() {
+        return typeSymbol;
+      },
     };
   }
-  
 }
