@@ -22,7 +22,7 @@ function TOAFactory() {
     let {compareWith, inputIsNothing, shouldBeIsNothing, inputCTOR, is_NAN} = getVariables(input, ...shouldBe);
     
     if (is_NAN) {
-      return compareWith
+      return shouldBe.length
         ? maybe({trial: _ => String(compareWith), whenError: _ => `-`}) === String(input)
         : `NaN`
     }
@@ -60,23 +60,23 @@ function TOAFactory() {
     return {compareWith, inputIsNothing, shouldBeIsNothing, inputCTOR, is_NAN};
   }
   
-  function getResult(input, shouldBe, me) {
-    if (input[proxySymbol] && shouldBe === Proxy) {
-      return shouldBe === Proxy;
+  function getResult(input, shouldBeCTOR, me) {
+    if (input[proxySymbol] && shouldBeCTOR === Proxy) {
+      return shouldBeCTOR === Proxy;
     }
     
-    if (maybe({trial: _ => String(shouldBe), whenError: _ => `-`}) === `NaN`) {
+    if (maybe({trial: _ => String(shouldBeCTOR), whenError: _ => `-`}) === `NaN`) {
       return String(input) === `NaN`;
     }
     
-    return shouldBe
+    return shouldBeCTOR
       ? maybe({
-        trial: _ => !!(input instanceof shouldBe),
+        trial: _ => !!(input instanceof shouldBeCTOR),
         whenError: _ => false
       }) ||
-      shouldBe === me ||
-      shouldBe === Object.getPrototypeOf(me) ||
-      `${shouldBe?.name}` === me?.name
+      shouldBeCTOR === me ||
+      shouldBeCTOR === Object.getPrototypeOf(me) ||
+      `${shouldBeCTOR?.name}` === me?.name
       : me?.name;
   }
   
