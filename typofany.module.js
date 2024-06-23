@@ -1,9 +1,3 @@
-/**
- * Note: typofany.module.js was a typo
- * Please use typEofany.module.js
- * The file is maintained for now for backward compatibility
- * but may be deleted later on.
- */
 const {
   IS,
   maybe,
@@ -39,12 +33,18 @@ function TOAFactory() {
   }
   
   function determineType(input, ...shouldBe) {
-    let {compareWith, inputIsNothing, shouldBeIsNothing, inputCTOR, is_NAN} = getVariables(input, ...shouldBe);
+    let {compareWith, inputIsNothing, shouldBeIsNothing, inputCTOR, is_NAN, is_Infinity} = getVariables(input, ...shouldBe);
     
     if (is_NAN) {
-      return compareWith
+      return shouldBe.length
         ? maybe({trial: _ => String(compareWith), whenError: _ => `-`}) === String(input)
         : `NaN`
+    }
+    
+    if (is_Infinity) {
+      return shouldBe.length
+        ? maybe({trial: _ => String(compareWith), whenError: _ => `-`}) === String(input)
+        : `Infinity`
     }
     
     if (inputIsNothing || shouldBeIsNothing) {
@@ -76,27 +76,28 @@ function TOAFactory() {
     const shouldBeIsNothing = sbLen && isNothing(compareWith);
     const inputCTOR = !inputIsNothing && Object.getPrototypeOf(input)?.constructor;
     const is_NAN = maybe({trial: _ => String(input), whenError: _ => `-`}) === `NaN`;
+    const is_Infinity = maybe({trial: _ => String(input), whenError: _ => `-`}) === `Infinity`;
     
-    return {compareWith, inputIsNothing, shouldBeIsNothing, inputCTOR, is_NAN};
+    return {compareWith, inputIsNothing, shouldBeIsNothing, inputCTOR, is_NAN, is_Infinity};
   }
   
-  function getResult(input, shouldBe, me) {
-    if (input[proxySymbol] && shouldBe === Proxy) {
-      return shouldBe === Proxy;
+  function getResult(input, shouldBeCTOR, me) {
+    if (input[proxySymbol] && shouldBeCTOR === Proxy) {
+      return shouldBeCTOR === Proxy;
     }
     
-    if (maybe({trial: _ => String(shouldBe), whenError: _ => `-`}) === `NaN`) {
+    if (maybe({trial: _ => String(shouldBeCTOR), whenError: _ => `-`}) === `NaN`) {
       return String(input) === `NaN`;
     }
     
-    return shouldBe
+    return shouldBeCTOR
       ? maybe({
-        trial: _ => !!(input instanceof shouldBe),
+        trial: _ => !!(input instanceof shouldBeCTOR),
         whenError: _ => false
       }) ||
-      shouldBe === me ||
-      shouldBe === Object.getPrototypeOf(me) ||
-      `${shouldBe?.name}` === me?.name
+      shouldBeCTOR === me ||
+      shouldBeCTOR === Object.getPrototypeOf(me) ||
+      `${shouldBeCTOR?.name}` === me?.name
       : me?.name;
   }
   
@@ -145,52 +146,48 @@ function TOAFactory() {
   function $XFactory(isSymbol, typeSymbol) {
     return function (someObj) {
       return Object.freeze({
-        get [typeSymbol]() {
-          return typeOf(someObj);
-        },
-        get type() {
-          return typeOf(someObj);
-        },
-        [isSymbol](...args) {
-          return IS(someObj, ...args);
-        },
-        is(...args) {
-          return IS(someObj, ...args);
-        }
+        get [typeSymbol]() { return typeOf(someObj); },
+        get type() { return typeOf(someObj); },
+        [isSymbol](...args) { return IS(someObj, ...args); },
+        is(...args) { return IS(someObj, ...args); }
       });
     }
   }
   
   function addSymbols2Object({is = `is`, type = `type`} = {}) {
-    //                       ^ Note: can be different Symbol names
     const isSymbol = Symbol(`toa.${is}`);
     const typeSymbol = Symbol(`toa.${type}`);
     
+    // prototypal
     if (!Object.getOwnPropertyDescriptors(Object.prototype)[isSymbol]) {
       Object.defineProperties(Object.prototype, {
         [typeSymbol]: {
-          get() {
-            return typeOf(this);
-          }, enumerable: true
+          get() { return typeOf(this); },
+          enumerable: true,
         },
         [isSymbol]: {
-          value: function (...args) {
-            return IS(this, ...args);
-          }, enumerable: true
+          value: function (...args) { return IS(this, ...args); },
+          enumerable: true,
+        },
+      });
+      
+      // static
+      Object.defineProperties(Object, {
+        [typeSymbol]: {
+          value(obj) { return typeOf(obj); },
+          enumerable: true,
+        },
+        [isSymbol]: {
+          value: function (obj, ...args) { return IS(obj, ...args); },
+          enumerable: true,
         },
       });
     }
     
     return {
-      // $X([someObject]).type/.is
-      // or Object[is]/[type] can be used for null/undefined
       $X: $XFactory(isSymbol, typeSymbol),
-      get is() {
-        return isSymbol;
-      },
-      get type() {
-        return typeSymbol;
-      },
+      get is() {  return isSymbol; },
+      get type() { return typeSymbol; },
     };
   }
 }
