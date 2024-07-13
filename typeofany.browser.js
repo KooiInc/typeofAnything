@@ -3,7 +3,7 @@ const { IS, maybe, typeOf, createWrappedProxy, extendObject, } = TOAFactory();
 function TOAFactory() {
   const proxySymbol = Symbol.for('proxied');
   
-  return { IS, maybe, typeOf, createWrappedProxy, extendObject: addSymbols2Object };
+  return { IS, maybe, typeOf, createWrappedProxy, extendObject: addSymbols2Object, isNothing };
   
   function IS(anything, ...shouldBe) {
     const input = typeof anything === `symbol` ? Symbol('any') : anything;
@@ -19,15 +19,16 @@ function TOAFactory() {
   }
   
   function determineType(input, ...shouldBe) {
-    let {compareWith, inputIsNothing, shouldBeIsNothing, inputCTOR, is_NAN, is_Infinity} = getVariables(input, ...shouldBe);
+    let {compareWith, inputIsNothing, shouldBeIsNothing, inputCTOR, isNAN, isInfinity} =
+      getVariables(input, ...shouldBe);
     
-    if (is_NAN) {
+    if (isNAN) {
       return shouldBe.length
         ? maybe({trial: _ => String(compareWith), whenError: _ => `-`}) === String(input)
         : `NaN`
     }
     
-    if (is_Infinity) {
+    if (isInfinity) {
       return shouldBe.length
         ? maybe({trial: _ => String(compareWith), whenError: _ => `-`}) === String(input)
         : `Infinity`
@@ -42,7 +43,7 @@ function TOAFactory() {
     }
     
     if (inputCTOR === Boolean) {
-      return !compareWith ? `Boolean` : !!(inputCTOR === compareWith);
+      return !compareWith ? `Boolean` : inputCTOR === compareWith;
     }
     
     return getResult(input, compareWith, getMe(input, inputCTOR));
@@ -61,10 +62,10 @@ function TOAFactory() {
     const inputIsNothing = isNothing(input);
     const shouldBeIsNothing = sbLen && isNothing(compareWith);
     const inputCTOR = !inputIsNothing && Object.getPrototypeOf(input)?.constructor;
-    const is_NAN = maybe({trial: _ => String(input), whenError: _ => `-`}) === `NaN`;
-    const is_Infinity = maybe({trial: _ => String(input), whenError: _ => `-`}) === `Infinity`;
+    const isNaN = maybe({trial: _ => String(input), whenError: _ => `-`}) === `NaN`;
+    const isInfinity = maybe({trial: _ => String(input), whenError: _ => `-`}) === `Infinity`;
     
-    return {compareWith, inputIsNothing, shouldBeIsNothing, inputCTOR, is_NAN, is_Infinity};
+    return {compareWith, inputIsNothing, shouldBeIsNothing, inputCTOR, is_NAN: isNaN, is_Infinity: isInfinity,};
   }
   
   function getResult(input, shouldBeCTOR, me) {
@@ -78,7 +79,7 @@ function TOAFactory() {
     
     return shouldBeCTOR
       ? maybe({
-        trial: _ => !!(input instanceof shouldBeCTOR),
+        trial: _ => input instanceof shouldBeCTOR,
         whenError: _ => false
       }) ||
       shouldBeCTOR === me ||
@@ -96,11 +97,10 @@ function TOAFactory() {
     return false;
   }
   
-  function isNothing(maybeNothing) {
-    return maybe({
-      trial: _ => /^(undefined|null)$/.test(String(maybeNothing)),
-      whenError: _ => false
-    });
+  function isNothing(maybeNothing, all = false) {
+    let value = maybeNothing === null || maybeNothing === undefined;
+    value = all ? value || maybeNothing === Infinity || isNaN(maybeNothing) : value;
+    return value || false;
   }
   
   function maybe({trial, whenError = err => console.log(err)} = {}) {
