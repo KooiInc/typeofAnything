@@ -35,10 +35,10 @@ function TOAFactory() {
   }
   
   function determineType(input, ...shouldBe) {
-    let {compareWith, inputIsNothing, shouldBeIsNothing, inputCTOR, isNAN, isInfinity} =
+    let {compareWith, inputIsNothing, shouldBeIsNothing, inputCTOR, isNaN, isInfinity} =
       getVariables(input, ...shouldBe);
     
-    if (isNAN) {
+    if (isNaN) {
       return shouldBe.length
         ? maybe({trial: _ => String(compareWith), whenError: _ => `-`}) === String(input)
         : `NaN`
@@ -81,7 +81,7 @@ function TOAFactory() {
     const isNaN = maybe({trial: _ => String(input), whenError: _ => `-`}) === `NaN`;
     const isInfinity = maybe({trial: _ => String(input), whenError: _ => `-`}) === `Infinity`;
     
-    return {compareWith, inputIsNothing, shouldBeIsNothing, inputCTOR, is_NAN: isNaN, is_Infinity: isInfinity,};
+    return {compareWith, inputIsNothing, shouldBeIsNothing, inputCTOR, isNaN, isInfinity,};
   }
   
   function getResult(input, shouldBeCTOR, me) {
