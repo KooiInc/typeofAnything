@@ -1,8 +1,6 @@
-/* 1.2.6 ... WIP */
 const {
   IS,
   maybe,
-  typeOf,
   $X,
   setProxy,
   resetProxy,
@@ -11,7 +9,6 @@ const {
 export {
   IS as default,
   maybe,
-  typeOf,
   $X,
   setProxy,
   resetProxy,
@@ -27,8 +24,7 @@ function TOAFactory() {
   addSymbols2Object();
   const $X = $XFactory()
   
-  return { IS, maybe, typeOf, isOrDefault,
-    isExcept, $X, isNothing, resetProxy, setProxy };
+  return { IS, maybe, $X, isNothing, resetProxy, setProxy };
   
   
   function setProxy() {
@@ -212,10 +208,5 @@ function TOAFactory() {
         },
       });
     }
-    
-    // return {
-    //   get is() {  return isSymbol; },
-    //   get type() { return typeSymbol; },
-    // };
   }
 }
