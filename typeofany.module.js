@@ -3,7 +3,6 @@ const {
   maybe,
   $X,
   setProxy,
-  resetProxy,
   isNothing,
 } = TOAFactory();
 export {
@@ -11,7 +10,6 @@ export {
   maybe,
   $X,
   setProxy,
-  resetProxy,
   isNothing,
 };
 
@@ -24,10 +22,12 @@ function TOAFactory() {
   addSymbols2Object();
   const $X = $XFactory()
   
-  return { IS, maybe, $X, isNothing, resetProxy, setProxy };
+  return { IS, maybe, $X, isNothing, setProxy };
   
   
-  function setProxy() {
+  function setProxy(native = false) {
+    if (native) { return window.Proxy = _Proxy; }
+    
     // adaptation of https://stackoverflow.com/a/53463589
     window.Proxy = new _Proxy(_Proxy, {
       construct(target, args) {
@@ -36,10 +36,6 @@ function TOAFactory() {
         return proxy;
       }
     });
-  }
-  
-  function resetProxy() {
-    window.Proxy = _Proxy;
   }
   
   function IS(anything, ...shouldBe) {
