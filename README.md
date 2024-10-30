@@ -33,8 +33,7 @@ Subsequently in your script (for example)
 <script>
   const isObject = IS({}, Array, Object);
   const nothing = null;
-  const {$X, is, type} = extendObject();
-  const isNothingNull = nothing?.[is](null) || $X(nothing).is(null); 
+  const isNothingNull = nothing?.[is](null) || $Wrap(nothing).is(null); 
   /* ... */
 </script>
 ```
@@ -50,11 +49,10 @@ Subsequently in your script (for example)
 
 ```html
 <script>
-  const {IS, extendObject} = TOAFactory();
+  const {IS, $Wrap} = TOAFactory();
   const isObject = IS({}, Array, Object);
   const nothing = null;
-  const {$X, is, type} = extendObject();
-  const isNothingNull = nothing?.is(null) || $X(nothing).is(null);
+  const isNothingNull = nothing?.is(null) || $Wrap(nothing).is(null);
   
   /* ... */
 </script>
