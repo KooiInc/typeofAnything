@@ -18,10 +18,11 @@ function TOAFactory() {
   Symbol.is = Symbol.for(`toa.is`);
   Symbol.type = Symbol.for(`toa.type`);
   addSymbols2Object();
-  const $X = $XFactory()
+  const $X = $XFactory();
+  const xProxy = setProxyFactory();
+  xProxy.custom();
   
-  return { IS, maybe, $X, isNothing, xProxy: setProxyFactory() };
-  
+  return { IS, maybe, $X, isNothing, xProxy };
   
   function setProxyFactory() {
     const _Proxy = window.Proxy;
