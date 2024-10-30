@@ -93,4 +93,5 @@ IS(null, null); //=> true
 IS(/[a-z]/gi, RegExp); //=> true
 ```
 
-For a more comprehensive example see this [[Stackblitz project](https://stackblitz.com/edit/js-qem4v7?file=typeofAnything.js)).
+The library can do a lot more (e.g. check if something is a `Proxy` instance).  
+To see it in action, see the examples in this [[Stackblitz project](https://stackblitz.com/edit/js-qem4v7?file=typeofAnything.js)).
