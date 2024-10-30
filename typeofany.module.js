@@ -2,14 +2,14 @@ const {
   IS,
   maybe,
   $X,
-  setProxy,
+  xProxy,
   isNothing,
 } = TOAFactory();
 export {
   IS as default,
   maybe,
   $X,
-  setProxy,
+  xProxy,
   isNothing,
 };
 
@@ -17,25 +17,28 @@ function TOAFactory() {
   Symbol.proxy = Symbol.for(`Symbol.proxy`);
   Symbol.is = Symbol.for(`toa.is`);
   Symbol.type = Symbol.for(`toa.type`);
-  const _Proxy = window.Proxy;
-  setProxy();
   addSymbols2Object();
   const $X = $XFactory()
   
-  return { IS, maybe, $X, isNothing, setProxy };
+  return { IS, maybe, $X, isNothing, xProxy: setProxyFactory() };
   
   
-  function setProxy(native = false) {
-    if (native) { return window.Proxy = _Proxy; }
+  function setProxyFactory() {
+    const _Proxy = window.Proxy;
     
-    // adaptation of https://stackoverflow.com/a/53463589
-    window.Proxy = new _Proxy(_Proxy, {
-      construct(target, args) {
-        const proxy = new target(...args);
-        proxy[Symbol.proxy] = `Proxy (${determineType(args[0])})`;
-        return proxy;
+    return {
+      native() { window.Proxy = _Proxy; },
+      custom() {
+        // adaptation of https://stackoverflow.com/a/53463589
+        window.Proxy = new _Proxy(_Proxy, {
+          construct(target, args) {
+            const proxy = new target(...args);
+            proxy[Symbol.proxy] = `Proxy (${determineType(args[0])})`;
+            return proxy;
+          }
+        });
       }
-    });
+    }
   }
   
   function IS(anything, ...shouldBe) {
