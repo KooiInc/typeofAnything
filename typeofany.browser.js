@@ -1,26 +1,67 @@
-const { IS, maybe, typeOf, createWrappedProxy, extendObject, isNothing } = TOAFactory();
+const {
+  IS,
+  maybe,
+  typeOf,
+  is,
+  type,
+  $X,
+  setProxy,
+  resetProxy,
+  isNothing } = TOAFactory();
 
 function TOAFactory() {
-  const proxySymbol = Symbol.for('proxied');
+  Symbol.proxy = Symbol.for(`Symbol.proxy`);
+  const _Proxy = window.Proxy;
+  setProxy();
+  const [isSymbol, typeSymbol] = [Symbol.for(`toa.is`), Symbol.for(`toa.type`)];
+  const {is, type } = addSymbols2Object(isSymbol, typeSymbol);
+  const $X = $XFactory(isSymbol, typeSymbol)
   
-  return { IS, maybe, typeOf, createWrappedProxy, extendObject: addSymbols2Object, isNothing };
+  return { IS, maybe, typeOf, isOrDefault,
+    isExcept, is, type, $X, isNothing, resetProxy, setProxy };
+  
+  
+  function setProxy() {
+    // adaptation of https://stackoverflow.com/a/53463589
+    window.Proxy = new _Proxy(_Proxy, {
+      construct(target, args) {
+        const proxy = new target(...args);
+        proxy[Symbol.proxy] = `Proxy (${determineType(args[0])})`;
+        return proxy;
+      }
+    });
+  }
+  
+  function resetProxy() {
+    window.Proxy = _Proxy;
+  }
   
   function IS(anything, ...shouldBe) {
+    if (shouldBe.length && shouldBe[0]?.isTypes) {
+      if (`defaultValue` in (shouldBe[0] || {})) {
+        return isOrDefault(anything, shouldBe[0]);
+      }
+      
+      if (`notTypes` in (shouldBe[0] || {})) {
+        return isExcept(anything, shouldBe[0]);
+      }
+    }
+    
     const input = typeof anything === `symbol` ? Symbol('any') : anything;
     return shouldBe.length > 1 ? ISOneOf(input, ...shouldBe) : determineType(input, ...shouldBe);
   }
   
   function typeOf(anything) {
-    if (anything?.[proxySymbol]) {
-      return 'Proxy';
-    }
-    
-    return IS(anything);
+    return anything?.[Symbol.proxy] ?? IS(anything);
   }
   
   function determineType(input, ...shouldBe) {
     let {compareWith, inputIsNothing, shouldBeIsNothing, inputCTOR, isNaN, isInfinity} =
       getVariables(input, ...shouldBe);
+    
+    if (input?.[Symbol.proxy] && shouldBe.length < 1) {
+      return input[Symbol.proxy];
+    }
     
     if (isNaN) {
       return shouldBe.length
@@ -69,7 +110,7 @@ function TOAFactory() {
   }
   
   function getResult(input, shouldBeCTOR, me) {
-    if (input[proxySymbol] && shouldBeCTOR === Proxy) {
+    if (input?.[Symbol.proxy] && shouldBeCTOR === Proxy) {
       return shouldBeCTOR === Proxy;
     }
     
@@ -116,21 +157,8 @@ function TOAFactory() {
     }
   }
   
-  function createWrappedProxy(fromObj, traps) {
-    const originalGetterTrap = traps.get ?? function (target, key) {
-      return target[key];
-    };
-    traps.get = function (target, key) {
-      return !(key in target)
-        ? `Proxy`
-        : originalGetterTrap(target, key);
-    };
-    fromObj[proxySymbol] = true;
-    return new Proxy(fromObj, traps);
-  }
-  
-  function $XFactory(isSymbol, typeSymbol) {
-    return function (someObj) {
+  function $XFactory() {
+    return function(someObj) {
       return Object.freeze({
         get [typeSymbol]() { return typeOf(someObj); },
         get type() { return typeOf(someObj); },
@@ -140,10 +168,15 @@ function TOAFactory() {
     }
   }
   
-  function addSymbols2Object({is = `is`, type = `type`} = {}) {
-    const isSymbol = Symbol(`toa.${is}`);
-    const typeSymbol = Symbol(`toa.${type}`);
-    
+  function isOrDefault(input, { defaultValue, isTypes = [] } = {}) {
+    return isTypes.length && IS(input, ...[isTypes].flat()) ? input : defaultValue;
+  }
+  
+  function isExcept(input, { isTypes = [], notTypes = [] } = {} ) {
+    return IS(input, ...[isTypes].flat()) && !IS(input, ...[notTypes].flat());
+  }
+  
+  function addSymbols2Object() {
     // prototypal
     if (!Object.getOwnPropertyDescriptors(Object.prototype)[isSymbol]) {
       Object.defineProperties(Object.prototype, {
@@ -171,7 +204,6 @@ function TOAFactory() {
     }
     
     return {
-      $X: $XFactory(isSymbol, typeSymbol),
       get is() {  return isSymbol; },
       get type() { return typeSymbol; },
     };

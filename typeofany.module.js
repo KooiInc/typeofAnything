@@ -1,52 +1,65 @@
 const {
   IS,
   maybe,
-  typeOf,
-  createWrappedProxy,
-  extendObject,
+  $Wrap,
+  xProxy,
   isNothing,
 } = TOAFactory();
-
 export {
   IS as default,
   maybe,
-  typeOf,
-  createWrappedProxy,
-  extendObject,
+  $Wrap,
+  xProxy,
   isNothing,
 };
 
 function TOAFactory() {
-  const proxySymbol = Symbol.for('proxied');
+  Symbol.proxy = Symbol.for(`Symbol.proxy`);
+  Symbol.is = Symbol.for(`toa.is`);
+  Symbol.type = Symbol.for(`toa.type`);
+  addSymbols2Object();
+  const $Wrap = WrapAnyFactory();
+  const xProxy = setProxyFactory();
+  xProxy.custom();
   
-  return { IS, maybe, typeOf, createWrappedProxy, extendObject: addSymbols2Object, isNothing };
+  return { IS, maybe, $Wrap, isNothing, xProxy };
   
   function IS(anything, ...shouldBe) {
+    if (shouldBe.length && shouldBe[0]?.isTypes) {
+      if (`defaultValue` in (shouldBe[0] || {})) {
+        return isOrDefault(anything, shouldBe[0]);
+      }
+      
+      if (`notTypes` in (shouldBe[0] || {})) {
+        return isExcept(anything, shouldBe[0]);
+      }
+    }
+    
     const input = typeof anything === `symbol` ? Symbol('any') : anything;
     return shouldBe.length > 1 ? ISOneOf(input, ...shouldBe) : determineType(input, ...shouldBe);
   }
   
   function typeOf(anything) {
-    if (anything?.[proxySymbol]) {
-      return 'Proxy';
-    }
-    
-    return IS(anything);
+    return anything?.[Symbol.proxy] ?? IS(anything);
   }
   
   function determineType(input, ...shouldBe) {
     let {compareWith, inputIsNothing, shouldBeIsNothing, inputCTOR, isNaN, isInfinity} =
-      getVariables(input, ...shouldBe);
+      processInput(input, ...shouldBe);
+    
+    if (input?.[Symbol.proxy] && shouldBe.length < 1) {
+      return input[Symbol.proxy];
+    }
     
     if (isNaN) {
       return shouldBe.length
-        ? maybe({trial: _ => String(compareWith), whenError: _ => `-`}) === String(input)
+        ? maybe({trial: _ => String(compareWith)}) === String(input)
         : `NaN`
     }
     
     if (isInfinity) {
       return shouldBe.length
-        ? maybe({trial: _ => String(compareWith), whenError: _ => `-`}) === String(input)
+        ? maybe({trial: _ => String(compareWith)}) === String(input)
         : `Infinity`
     }
     
@@ -72,31 +85,30 @@ function TOAFactory() {
           ? {name: String(input)} : inputCTOR;
   }
   
-  function getVariables(input, ...shouldBe) {
+  function processInput(input, ...shouldBe) {
     const sbLen = shouldBe.length > 0;
     const compareWith = sbLen && shouldBe.shift();
     const inputIsNothing = isNothing(input);
     const shouldBeIsNothing = sbLen && isNothing(compareWith);
     const inputCTOR = !inputIsNothing && Object.getPrototypeOf(input)?.constructor;
-    const isNaN = maybe({trial: _ => String(input), whenError: _ => `-`}) === `NaN`;
-    const isInfinity = maybe({trial: _ => String(input), whenError: _ => `-`}) === `Infinity`;
+    const isNaN = maybe({trial: _ => String(input)}) === `NaN`;
+    const isInfinity = maybe({trial: _ => String(input)}) === `Infinity`;
     
     return {compareWith, inputIsNothing, shouldBeIsNothing, inputCTOR, isNaN, isInfinity,};
   }
   
   function getResult(input, shouldBeCTOR, me) {
-    if (input[proxySymbol] && shouldBeCTOR === Proxy) {
+    if (input?.[Symbol.proxy] && shouldBeCTOR === Proxy) {
       return shouldBeCTOR === Proxy;
     }
     
-    if (maybe({trial: _ => String(shouldBeCTOR), whenError: _ => `-`}) === `NaN`) {
+    if (maybe({trial: _ => String(shouldBeCTOR)}) === `NaN`) {
       return String(input) === `NaN`;
     }
     
     return shouldBeCTOR
       ? maybe({
         trial: _ => input instanceof shouldBeCTOR,
-        whenError: _ => false
       }) ||
       shouldBeCTOR === me ||
       shouldBeCTOR === Object.getPrototypeOf(me) ||
@@ -119,7 +131,7 @@ function TOAFactory() {
     return value || false;
   }
   
-  function maybe({trial, whenError = err => console.log(err)} = {}) {
+  function maybe({trial, whenError = () => undefined} = {}) {
     if (!trial || !(trial instanceof Function)) {
       console.info(`TypeofAnything {maybe}: trial parameter not a Function or Lambda`);
       return false;
@@ -128,46 +140,38 @@ function TOAFactory() {
     try {
       return trial();
     } catch (err) {
-      return whenError(err);
+      return IS(whenError, Function) && whenError(err) || undefined;
     }
   }
   
-  function createWrappedProxy(fromObj, traps) {
-    const originalGetterTrap = traps.get ?? function (target, key) {
-      return target[key];
-    };
-    traps.get = function (target, key) {
-      return !(key in target)
-        ? `Proxy`
-        : originalGetterTrap(target, key);
-    };
-    fromObj[proxySymbol] = true;
-    return new Proxy(fromObj, traps);
-  }
-  
-  function $XFactory(isSymbol, typeSymbol) {
-    return function (someObj) {
+  function WrapAnyFactory() {
+    return function(someObj) {
       return Object.freeze({
-        get [typeSymbol]() { return typeOf(someObj); },
+        get [Symbol.type]() { return typeOf(someObj); },
         get type() { return typeOf(someObj); },
-        [isSymbol](...args) { return IS(someObj, ...args); },
+        [Symbol.is](...args) { return IS(someObj, ...args); },
         is(...args) { return IS(someObj, ...args); }
       });
     }
   }
   
-  function addSymbols2Object({is = `is`, type = `type`} = {}) {
-    const isSymbol = Symbol(`toa.${is}`);
-    const typeSymbol = Symbol(`toa.${type}`);
-    
+  function isOrDefault(input, { defaultValue, isTypes = [] } = {}) {
+    return isTypes.length && IS(input, ...[isTypes].flat()) ? input : defaultValue;
+  }
+  
+  function isExcept(input, { isTypes = [], notTypes = [] } = {} ) {
+    return IS(input, ...[isTypes].flat()) && !IS(input, ...[notTypes].flat());
+  }
+  
+  function addSymbols2Object() {
     // prototypal
-    if (!Object.getOwnPropertyDescriptors(Object.prototype)[isSymbol]) {
+    if (!Object.getOwnPropertyDescriptors(Object.prototype)[Symbol.is]) {
       Object.defineProperties(Object.prototype, {
-        [typeSymbol]: {
+        [Symbol.type]: {
           get() { return typeOf(this); },
           enumerable: true,
         },
-        [isSymbol]: {
+        [Symbol.is]: {
           value: function (...args) { return IS(this, ...args); },
           enumerable: true,
         },
@@ -175,21 +179,33 @@ function TOAFactory() {
       
       // static
       Object.defineProperties(Object, {
-        [typeSymbol]: {
+        [Symbol.type]: {
           value(obj) { return typeOf(obj); },
           enumerable: true,
         },
-        [isSymbol]: {
+        [Symbol.is]: {
           value: function (obj, ...args) { return IS(obj, ...args); },
           enumerable: true,
         },
       });
     }
+  }
+  
+  function setProxyFactory() {
+    const _Proxy = window.Proxy;
     
     return {
-      $X: $XFactory(isSymbol, typeSymbol),
-      get is() {  return isSymbol; },
-      get type() { return typeSymbol; },
-    };
+      native() { window.Proxy = _Proxy; },
+      custom() {
+        // adaptation of https://stackoverflow.com/a/53463589
+        window.Proxy = new _Proxy(_Proxy, {
+          construct(target, args) {
+            const proxy = new target(...args);
+            proxy[Symbol.proxy] = `Proxy (${determineType(args[0])})`;
+            return proxy;
+          }
+        });
+      }
+    }
   }
 }
