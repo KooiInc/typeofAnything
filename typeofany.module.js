@@ -1,9 +1,8 @@
+/* 1.2.6 ... WIP */
 const {
   IS,
   maybe,
   typeOf,
-  is,
-  type,
   $X,
   setProxy,
   resetProxy,
@@ -13,8 +12,6 @@ export {
   IS as default,
   maybe,
   typeOf,
-  is,
-  type,
   $X,
   setProxy,
   resetProxy,
@@ -23,14 +20,15 @@ export {
 
 function TOAFactory() {
   Symbol.proxy = Symbol.for(`Symbol.proxy`);
+  Symbol.is = Symbol.for(`toa.is`);
+  Symbol.type = Symbol.for(`toa.type`);
   const _Proxy = window.Proxy;
   setProxy();
-  const [isSymbol, typeSymbol] = [Symbol.for(`toa.is`), Symbol.for(`toa.type`)];
-  const {is, type } = addSymbols2Object(isSymbol, typeSymbol);
-  const $X = $XFactory(isSymbol, typeSymbol)
+  addSymbols2Object();
+  const $X = $XFactory()
   
   return { IS, maybe, typeOf, isOrDefault,
-    isExcept, is, type, $X, isNothing, resetProxy, setProxy };
+    isExcept, $X, isNothing, resetProxy, setProxy };
   
   
   function setProxy() {
@@ -172,9 +170,9 @@ function TOAFactory() {
   function $XFactory() {
     return function(someObj) {
       return Object.freeze({
-        get [typeSymbol]() { return typeOf(someObj); },
+        get [Symbol.type]() { return typeOf(someObj); },
         get type() { return typeOf(someObj); },
-        [isSymbol](...args) { return IS(someObj, ...args); },
+        [Symbol.is](...args) { return IS(someObj, ...args); },
         is(...args) { return IS(someObj, ...args); }
       });
     }
@@ -190,13 +188,13 @@ function TOAFactory() {
   
   function addSymbols2Object() {
     // prototypal
-    if (!Object.getOwnPropertyDescriptors(Object.prototype)[isSymbol]) {
+    if (!Object.getOwnPropertyDescriptors(Object.prototype)[Symbol.is]) {
       Object.defineProperties(Object.prototype, {
-        [typeSymbol]: {
+        [Symbol.type]: {
           get() { return typeOf(this); },
           enumerable: true,
         },
-        [isSymbol]: {
+        [Symbol.is]: {
           value: function (...args) { return IS(this, ...args); },
           enumerable: true,
         },
@@ -204,20 +202,20 @@ function TOAFactory() {
       
       // static
       Object.defineProperties(Object, {
-        [typeSymbol]: {
+        [Symbol.type]: {
           value(obj) { return typeOf(obj); },
           enumerable: true,
         },
-        [isSymbol]: {
+        [Symbol.is]: {
           value: function (obj, ...args) { return IS(obj, ...args); },
           enumerable: true,
         },
       });
     }
     
-    return {
-      get is() {  return isSymbol; },
-      get type() { return typeSymbol; },
-    };
+    // return {
+    //   get is() {  return isSymbol; },
+    //   get type() { return typeSymbol; },
+    // };
   }
 }
