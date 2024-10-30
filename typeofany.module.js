@@ -24,24 +24,6 @@ function TOAFactory() {
   
   return { IS, maybe, $Wrap, isNothing, xProxy };
   
-  function setProxyFactory() {
-    const _Proxy = window.Proxy;
-    
-    return {
-      native() { window.Proxy = _Proxy; },
-      custom() {
-        // adaptation of https://stackoverflow.com/a/53463589
-        window.Proxy = new _Proxy(_Proxy, {
-          construct(target, args) {
-            const proxy = new target(...args);
-            proxy[Symbol.proxy] = `Proxy (${determineType(args[0])})`;
-            return proxy;
-          }
-        });
-      }
-    }
-  }
-  
   function IS(anything, ...shouldBe) {
     if (shouldBe.length && shouldBe[0]?.isTypes) {
       if (`defaultValue` in (shouldBe[0] || {})) {
@@ -63,7 +45,7 @@ function TOAFactory() {
   
   function determineType(input, ...shouldBe) {
     let {compareWith, inputIsNothing, shouldBeIsNothing, inputCTOR, isNaN, isInfinity} =
-      getVariables(input, ...shouldBe);
+      processInput(input, ...shouldBe);
     
     if (input?.[Symbol.proxy] && shouldBe.length < 1) {
       return input[Symbol.proxy];
@@ -71,13 +53,13 @@ function TOAFactory() {
     
     if (isNaN) {
       return shouldBe.length
-        ? maybe({trial: _ => String(compareWith), whenError: _ => `-`}) === String(input)
+        ? maybe({trial: _ => String(compareWith)}) === String(input)
         : `NaN`
     }
     
     if (isInfinity) {
       return shouldBe.length
-        ? maybe({trial: _ => String(compareWith), whenError: _ => `-`}) === String(input)
+        ? maybe({trial: _ => String(compareWith)}) === String(input)
         : `Infinity`
     }
     
@@ -103,14 +85,14 @@ function TOAFactory() {
           ? {name: String(input)} : inputCTOR;
   }
   
-  function getVariables(input, ...shouldBe) {
+  function processInput(input, ...shouldBe) {
     const sbLen = shouldBe.length > 0;
     const compareWith = sbLen && shouldBe.shift();
     const inputIsNothing = isNothing(input);
     const shouldBeIsNothing = sbLen && isNothing(compareWith);
     const inputCTOR = !inputIsNothing && Object.getPrototypeOf(input)?.constructor;
-    const isNaN = maybe({trial: _ => String(input), whenError: _ => `-`}) === `NaN`;
-    const isInfinity = maybe({trial: _ => String(input), whenError: _ => `-`}) === `Infinity`;
+    const isNaN = maybe({trial: _ => String(input)}) === `NaN`;
+    const isInfinity = maybe({trial: _ => String(input)}) === `Infinity`;
     
     return {compareWith, inputIsNothing, shouldBeIsNothing, inputCTOR, isNaN, isInfinity,};
   }
@@ -120,14 +102,13 @@ function TOAFactory() {
       return shouldBeCTOR === Proxy;
     }
     
-    if (maybe({trial: _ => String(shouldBeCTOR), whenError: _ => `-`}) === `NaN`) {
+    if (maybe({trial: _ => String(shouldBeCTOR)}) === `NaN`) {
       return String(input) === `NaN`;
     }
     
     return shouldBeCTOR
       ? maybe({
         trial: _ => input instanceof shouldBeCTOR,
-        whenError: _ => false
       }) ||
       shouldBeCTOR === me ||
       shouldBeCTOR === Object.getPrototypeOf(me) ||
@@ -150,7 +131,7 @@ function TOAFactory() {
     return value || false;
   }
   
-  function maybe({trial, whenError = err => console.log(err)} = {}) {
+  function maybe({trial, whenError = () => undefined} = {}) {
     if (!trial || !(trial instanceof Function)) {
       console.info(`TypeofAnything {maybe}: trial parameter not a Function or Lambda`);
       return false;
@@ -159,7 +140,7 @@ function TOAFactory() {
     try {
       return trial();
     } catch (err) {
-      return whenError(err);
+      return IS(whenError, Function) && whenError(err) || undefined;
     }
   }
   
@@ -207,6 +188,24 @@ function TOAFactory() {
           enumerable: true,
         },
       });
+    }
+  }
+  
+  function setProxyFactory() {
+    const _Proxy = window.Proxy;
+    
+    return {
+      native() { window.Proxy = _Proxy; },
+      custom() {
+        // adaptation of https://stackoverflow.com/a/53463589
+        window.Proxy = new _Proxy(_Proxy, {
+          construct(target, args) {
+            const proxy = new target(...args);
+            proxy[Symbol.proxy] = `Proxy (${determineType(args[0])})`;
+            return proxy;
+          }
+        });
+      }
     }
   }
 }
