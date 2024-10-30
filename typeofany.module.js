@@ -1,14 +1,14 @@
 const {
   IS,
   maybe,
-  $X,
+  $Wrap,
   xProxy,
   isNothing,
 } = TOAFactory();
 export {
   IS as default,
   maybe,
-  $X,
+  $Wrap,
   xProxy,
   isNothing,
 };
@@ -18,11 +18,11 @@ function TOAFactory() {
   Symbol.is = Symbol.for(`toa.is`);
   Symbol.type = Symbol.for(`toa.type`);
   addSymbols2Object();
-  const $X = $XFactory();
+  const $Wrap = WrapAnyFactory();
   const xProxy = setProxyFactory();
   xProxy.custom();
   
-  return { IS, maybe, $X, isNothing, xProxy };
+  return { IS, maybe, $Wrap, isNothing, xProxy };
   
   function setProxyFactory() {
     const _Proxy = window.Proxy;
@@ -163,7 +163,7 @@ function TOAFactory() {
     }
   }
   
-  function $XFactory() {
+  function WrapAnyFactory() {
     return function(someObj) {
       return Object.freeze({
         get [Symbol.type]() { return typeOf(someObj); },
