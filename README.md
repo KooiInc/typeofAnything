@@ -1,4 +1,4 @@
-# typeof *anything*
+# type check *any ECMAScript thing*
 
 Ecmascript can be a bitch when it comes to (determining) the type of variables. Sometimes `typeof`/`instanceof`/`constructor` etc. will 
 just not give the right results. On the other hand I don't want to abandon dynamic typing, it offers that much more than static typing 
