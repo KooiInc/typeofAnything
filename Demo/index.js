@@ -33,7 +33,10 @@ document.querySelectorAll(`code.block`)
 Prism.highlightAll();
 
 function getHeader() {
-  return t => `<p><a target="_top" href="https://stackblitz.com/@KooiInc">All projects</a>
+  const backLink = /github\.io|localhost/i.test(location.href)
+    ? `<a target="_top" href="https://github.com/KooiInc/typeofAnything">Back to repository</a>`
+    : `<a target="_top" href="https://stackblitz.com/@KooiInc">All projects</a>`;
+  return t => `<p>${backLink}
     | <a target="_blank" href="https://www.npmjs.com/package/typeofanything">@NPM</a></p>
     <div class="normal"><h3>TypeofAnything: determine/check the type of nearly any (ECMAScript) thing</h3>
       (including null/undefined/NaN/true/false etc.) Pre-release 1.2.6</div>
