@@ -39,7 +39,7 @@ function getHeader() {
   return t => `<p>${backLink}
     | <a target="_blank" href="https://www.npmjs.com/package/typeofanything">@NPM</a></p>
     <div class="normal"><h3>TypeofAnything: determine/check the type of nearly any (ECMAScript) thing</h3>
-      (including null/undefined/NaN/true/false etc.) Pre-release 1.2.6</div>
+      (including null/undefined/NaN/true/false etc.)</div>
     <code class="block">
     // import & initialize
     import { 
