@@ -98,4 +98,4 @@ IS(/[a-z]/gi, RegExp); //=> true
 The library can do a lot more (e.g. check if something is a `Proxy` instance).  
 To see it in action, see the examples in 
 the [demonstration page](https://kooiinc.github.io/typeofAnything/Demo)
-or fiddle with it with a fork of this [[Stackblitz project](https://stackblitz.com/edit/js-qem4v7?file=typeofAnything.js)).
+or fiddle with it with a fork of this [Stackblitz project](https://stackblitz.com/edit/js-qem4v7?file=typeofAnything.js).
