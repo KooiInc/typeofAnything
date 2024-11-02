@@ -1,8 +1,10 @@
-# typeof *anything*
+# type check *any ECMAScript thing*
 
-Ecmascript can be a bitch when it comes to (determining) the type of variables. Sometimes `typeof`/`instanceof`/`constructor` etc. will 
+ECMAscript can be a bitch when it comes to (determining) the type of variables. Sometimes `typeof`/`instanceof`/`constructor` etc. will 
 just not give the right results. On the other hand I don't want to abandon dynamic typing, it offers that much more than static typing 
-(so, *no typescript here*). But still, there are moments where I want to be more certain that a variable is of the type I actually 
+(so, *no typescript here*). 
+
+Still, there are moments where I want to be more certain that a variable is of the type I actually 
 need (e.g in my [JQL](https://github.com/KooiInc/JQL) library).
 
 So I created this little module/library. It tries to provide a function to determine a type of anything your throw at it.
