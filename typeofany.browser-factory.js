@@ -132,6 +132,7 @@ function TOAFactory() {
   function WrapAnyFactory() {
     return function(someObj) {
       return Object.freeze({
+        get value() { return someObj; },
         get [Symbol.type]() { return typeOf(someObj); },
         get type() { return typeOf(someObj); },
         [Symbol.is](...args) { return IS(someObj, ...args); },
