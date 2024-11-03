@@ -104,6 +104,7 @@ function codeExamples() {
     _ => IS([]),
     _ => IS([], Array),
     _ => IS("nothing", Array, String),
+    _ => IS("nothing", Object, HTMLElement, null, NaN, undefined, Infinity),
     _ => IS(div, Node),
     _ => IS(not_a_nr, NaN),
     _ => IS(1/0, Infinity),
@@ -352,7 +353,6 @@ function logExampleCB(example) {
 
 function printExamples() {
   codeExamples().forEach(logExampleCB);
-  //wrap2Container();
 }
 
 function logFactory(formatJSON = true) {
