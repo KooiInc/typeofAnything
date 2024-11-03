@@ -166,12 +166,12 @@ function codeExamples() {
             <b>Proxy</b><br>
             A <code>Proxy</code> instance has no prototype,
             it is designed to be transparent to the proxied Object.
-            <br>So checking the type of a <code>Proxy</code> instance 
+            <br>So checking the type of a <code>Proxy</code> instance
             will return the type of the <i>constituating Object</i>.
             <br><code>typeOfAnything</code> by default <i>redefines</i>
-              the <code>Proxy</code> constructor to create <code>Proxy</code> 
+              the <code>Proxy</code> constructor to create <code>Proxy</code>
               instances with a determinable type.
-            <br>With it the result of checking the type of a <code>Proxy</code> 
+            <br>With it the result of checking the type of a <code>Proxy</code>
               instance is now:
             <br><code>"Proxy ([type of the proxified original])"</code>.</div>`,
     _ => new Proxy({}, {})[type],
@@ -183,6 +183,7 @@ function codeExamples() {
     _ => proxyEx[is](Proxy),
     _ => proxyEx[is](String),
     
+    // TODO
     t => xProxy.native(),
     t => `<div class="normal">When we reset <code>Proxy</code>
           to its initial constructor (using <code>xProxy.native()</code>),
@@ -276,7 +277,7 @@ function codeExamples() {
     _ => IS(div, {isTypes: HTMLDivElement, notTypes: HTMLUnknownElement}),
     _ => IS(div, {isTypes: HTMLUListElement, defaultValue: printHTML(div.outerHTML)}),
     _ => IS(div, {isTypes: [undefined, null, NaN], defaultValue: printHTML(div.outerHTML)}),
-
+    
     t => xProxy.custom(),
     t => `<div class="normal">* Rewritten <code>Proxy</code> constructor (<code>xProxy.custom()</code>)</div>`,
     _ => new Proxy(new Date(), {})[type],
