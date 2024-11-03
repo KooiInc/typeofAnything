@@ -6,18 +6,15 @@ function TOAFactory() {
   Symbol.is = Symbol.for(`toa.is`);
   Symbol.type = Symbol.for(`toa.type`);
   Symbol.any = Symbol.for(`toa.any`);
-  addSymbols2Object();
-  const $Wrap = WrapAnyFactory();
-  const xProxy = setProxyFactory();
+  addSymbols2Anything();
+  const [$Wrap, xProxy] = [WrapAnyFactory(), setProxyFactory()];
   xProxy.custom();
-  
   return { IS, maybe: maybeFactory(), $Wrap, isNothing, xProxy };
   
   function IS(anything, ...shouldBe) {
     if (shouldBe.length && shouldBe[0]?.isTypes) {
       return `defaultValue` in (shouldBe[0]) ? isOrDefault(anything, shouldBe[0]) : isExcept(anything, shouldBe[0]);
     }
-    
     const input = typeof anything === `symbol` ? Symbol.any : anything;
     return shouldBe.length > 1 ? ISOneOf(input, ...shouldBe) : determineType(input, ...shouldBe);
   }
@@ -50,14 +47,12 @@ function TOAFactory() {
     const inputCTOR = !noInput && Object.getPrototypeOf(input)?.constructor;
     const isNaN = maybe({trial: _ => String(input)}) === `NaN`;
     const isInfinity = maybe({trial: _ => String(input)}) === `Infinity`;
-    
     return {compareWith, noInput: noInput, noShouldbe: noShouldbe, inputCTOR, isNaN, isInfinity,};
   }
   
   function getResult(input, shouldBeCTOR, me) {
     if (input?.[Symbol.proxy] && shouldBeCTOR === Proxy) { return shouldBeCTOR === Proxy; }
     if (maybe({trial: _ => String(shouldBeCTOR)}) === `NaN`) { return String(input) === `NaN`; }
-    
     return shouldBeCTOR
       ? maybe({ trial: _ => input instanceof shouldBeCTOR, }) ||
         shouldBeCTOR === me || shouldBeCTOR === Object.getPrototypeOf(me) ||
@@ -65,24 +60,21 @@ function TOAFactory() {
   }
   
   function ISOneOf(obj, ...params) {
-    for (const param of params) { if (IS(obj, param)) { return true; } }
-    return false;
+    return params.some(param => IS(obj, param));
   }
   
   function isNothing(maybeNothing, all = false) {
-    let value = maybeNothing === null || maybeNothing === undefined;
-    value = all ? value || maybeNothing === Infinity || isNaN(maybeNothing) : value;
-    return value || false;
-  }
-  
-  function tryFn(maybeFn, maybeError) {
-    return maybeFn?.constructor === Function ? maybeFn(maybeError) : undefined;
+    let nada = maybeNothing === null || maybeNothing === undefined;
+    nada = all ? nada || maybeNothing === Infinity || isNaN(maybeNothing) : nada;
+    return nada;
   }
   
   function maybeFactory() {
+    const tryFn = (maybeFn, maybeError) => maybeFn?.constructor === Function ? maybeFn(maybeError) : undefined;
     return function({trial, whenError = () => undefined} = {}) {
-      try { return tryFn(trial) } catch(err) { return tryFn(whenError, err) }
+      try { return tryFn(trial) } catch(err) { return tryFn(whenError, err); }
     };
+    
   }
   
   function WrapAnyFactory() {
@@ -105,7 +97,7 @@ function TOAFactory() {
     return IS(input, ...[isTypes].flat()) && !IS(input, ...[notTypes].flat());
   }
   
-  function addSymbols2Object() {
+  function addSymbols2Anything() {
     if (!Object.getOwnPropertyDescriptors(Object.prototype)[Symbol.is]) {
       Object.defineProperties(Object.prototype, {
         [Symbol.type]: { get() { return typeOf(this); }, },
@@ -119,13 +111,12 @@ function TOAFactory() {
   }
   
   function setProxyFactory() {
-    const _Proxy = window.Proxy;
-    
+    const nativeProxy = window.Proxy;
     return {
-      native() { window.Proxy = _Proxy; },
+      native() { window.Proxy = nativeProxy; },
       custom() {
         // adaptation of https://stackoverflow.com/a/53463589
-        window.Proxy = new _Proxy(_Proxy, {
+        window.Proxy = new nativeProxy(nativeProxy, {
           construct(target, args) {
             const proxy = new target(...args);
             proxy[Symbol.proxy] = `Proxy (${determineType(args[0])})`;
