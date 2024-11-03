@@ -183,7 +183,6 @@ function codeExamples() {
     _ => proxyEx[is](Proxy),
     _ => proxyEx[is](String),
     
-    // TODO
     t => xProxy.native(),
     t => `<div class="normal">When we reset <code>Proxy</code>
           to its initial constructor (using <code>xProxy.native()</code>),
