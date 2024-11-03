@@ -32,7 +32,8 @@ The module exports:
    `maybe({trial: [function][, whenError: function]}`
  
     *Note*: without a `whenError` parameter, `maybe` returns `undefined` when `trial` fails.
-- `isNothing(input:any[, all: boolean]`: a function to check if input is either `null || undefined` or `null || undefined || NaN || Infinity` (`all: true`).
+- `isNothing(input:any[, all: boolean]`: a function to check if input is either `null || undefined` or `null (`all: false`)
+    || undefined || NaN || Infinity` (`all: true`).
 - `xProxy`: in the `typeofAnything` module the native `Proxy` constructor is rewritten, which enables checking if input is
    a proxy instance (and its constituting type). xProxy is an Object to enable/disable this. Syntax:
    
