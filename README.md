@@ -1,14 +1,6 @@
-# type check *any ECMAScript thing*
+# typeofAnything
 
-ECMAscript (ES) can be a bitch when it comes to (determining) the type of variables. Sometimes `typeof`/`instanceof`/`constructor` etc. will just not give the results one needs. 
-
-On the other hand dynamic typing offers so much more than static typing. Replacing ES with the `typeScript` 
-superset is cumbersome and restricting (to say te least).
-
-There are moments where one wants to be more certain that a variable is of the type one actually needs.
-
-So here is this little module/library. It tries to provide functionality to determine a type of ... well, 
-*anything your throw at it*.
+A little ES20xx module to determine the type of ... well, *anything one throws at it*.
 
 The code is available as an ESM module, as a browser script and as a browser script containing a factory function. 
 
@@ -39,6 +31,10 @@ The module exports:
    
    - `xProxy.native()`: use the native ES20xx `Proxy` constructor (disable type checking for proxies - so opt out from module default)
    - `xProxy.custom()`: use the custom `Proxy` constructor (enable type checking for proxies)
+
+For an extensive set of examples see
+the [demonstration page](https://kooiinc.github.io/typeofAnything/Demo)
+or fiddle with it with a fork of this [Stackblitz project](https://stackblitz.com/edit/js-qem4v7?file=typeofAnything.js).
 
 ## Import the module
 
@@ -88,6 +84,3 @@ Subsequently in your script (for example)
   /* ... */
 </script>
 ```
-For an extensive set of examples see 
-the [demonstration page](https://kooiinc.github.io/typeofAnything/Demo)
-or fiddle with it with a fork of this [Stackblitz project](https://stackblitz.com/edit/js-qem4v7?file=typeofAnything.js).
