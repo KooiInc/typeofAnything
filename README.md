@@ -1,15 +1,43 @@
 # type check *any ECMAScript thing*
 
-ECMAscript can be a bitch when it comes to (determining) the type of variables. Sometimes `typeof`/`instanceof`/`constructor` etc. will 
-just not give the right results. On the other hand I don't want to abandon dynamic typing, it offers that much more than static typing 
-(so, *no typescript here*). 
+ECMAscript (ES) can be a bitch when it comes to (determining) the type of variables. Sometimes `typeof`/`instanceof`/`constructor` etc. will just not give the results one needs. 
 
-Still, there are moments where I want to be more certain that a variable is of the type I actually 
-need (e.g in my [JQL](https://github.com/KooiInc/JQL) library).
+On the other hand dynamic typing offers so much more than static typing. Replacing ES with the `typeScript` 
+superset is cumbersome and restricting (to say te least).
 
-So I created this little module/library. It tries to provide a function to determine a type of anything your throw at it.
+There are moments where one wants to be more certain that a variable is of the type one actually needs.
 
-The code is available as an (importable) module, as a browser script and from [NPM](https://www.npmjs.com/package/typeofanything).
+So here is this little module/library. It tries to provide functionality to determine a type of ... well, 
+*anything your throw at it*.
+
+The code is available as an ESM module, as a browser script and as a browser script containing a factory function. 
+
+The module is also available from [NPM](https://www.npmjs.com/package/typeofanything).
+
+## Exports
+The module exports:
+- `default`: a function to determine the type of a given input. Syntax:
+
+   `[imported default function](input, [...type] | {...})`
+
+    *Note*: for the `{...}` parameter, see the [demonstration page](https://kooiinc.github.io/typeofAnything/Demo)
+
+- `$Wrap`: a function that wraps input and returns an Object with keys:
+   - `value`: the input value 
+   - `is([...types]|{...})`: function to determine the type of the wrapped input. This may also be `[Symbol.is]`.
+   - `type`: returns (a string representation) of the type of the wrapped input. This may also be `[Symbol.type]`
+   
+- `maybe`: a utility function that returns either a tested value, or an error value of choice, syntax
+
+   `maybe({trial: [function][, whenError: function]}`
+ 
+    *Note*: without a `whenError` parameter, `maybe` returns `undefined` when `trial` fails.
+- `isNothing(input:any[, all: boolean]`: a function to check if input is either `null || undefined` or `null || undefined || NaN || Infinity` (`all: true`).
+- `xProxy`: in the `typeofAnything` module the native `Proxy` constructor is rewritten, which enables checking if input is
+   a proxy instance (and its constituting type). xProxy is an Object to enable/disable this. Syntax:
+   
+   - `xProxy.native()`: use the native ES20xx `Proxy` constructor (disable type checking for proxies - so opt out from module default)
+   - `xProxy.custom()`: use the custom `Proxy` constructor (enable type checking for proxies)
 
 ## Import the module
 
@@ -59,43 +87,6 @@ Subsequently in your script (for example)
   /* ... */
 </script>
 ```
-
-## Syntax
-
-`[imported IS function](anything, [...type])`
-
-## Return value
-
-The method returns either a boolean (`anything` is/is not (one of) `[...type]`) 
-or a string representation of the found 'type' (may also be `null`, `NaN` or `undefined`).
-
-For checking if `anything` is (one of) `[...type]`, the level of specificity is
-up to the prototype of `anything` (when it is found). For example
-
-- `IS(document.createElement("div"), HTMLDivElement)`
-*and* `IS(document.createElement("div"), HTMLElement)` are both true, but
-`IS(document.createElement("div"), Node)` will be false. 
-- `IS(Array, Object)` will be false, `IS(Array, Array)` true. 
-
-## Examples
-
-```javascript
-// assume the function is imported as IS
-const showMeMyType = something => IS(something)
-const someObj = {a: 1, b: `hello`, c: `world`};
-const wMap = new WeakMap();
-IS(someObj); // => Object
-showMeMyType(wMap); // => WeakMap
-IS(someObj, Object); // => true
-IS(someObj, Array, String); // => false
-IS(someObj, Symbol, String, RegExp, Object); // => true
-IS(null); //=> null
-IS(null, undefined); //=> false
-IS(null, null); //=> true
-IS(/[a-z]/gi, RegExp); //=> true
-```
-
-The library can do a lot more (e.g. check if something is a `Proxy` instance).  
-To see it in action, see the examples in 
+For an extensive set of examples see 
 the [demonstration page](https://kooiinc.github.io/typeofAnything/Demo)
 or fiddle with it with a fork of this [Stackblitz project](https://stackblitz.com/edit/js-qem4v7?file=typeofAnything.js).
