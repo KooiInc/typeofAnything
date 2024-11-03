@@ -1,5 +1,5 @@
 import { default as IS, maybe, $Wrap, isNothing, xProxy }
-  from "./typeofAnything.js"; // also @https://github.com/KooiInc/typeofAnything
+  from "../typeofany.module.js";
 
 const {log} = logFactory();
 
@@ -44,6 +44,7 @@ function getHeader() {
     // import & initialize
     import { 
       default as IS, // the main type checking function
+      maybe,         // a try/catch wrapper function
       $Wrap,         // wrapper for any variable
       isNothing,     // special function for empty stuff (null, NaN etc)
       xProxy,        /* Object for Proxy implementation. Syntax:
@@ -149,6 +150,18 @@ function codeExamples() {
     _ => null?.[type] ?? $Wrap(null).type,
     _ => undefined?.[is](undefined) ?? $Wrap(undefined).is(undefined),
     
+    t => `<div class="normal"><b>The <code>maybe</code> function</b></div>`,
+    _ => maybe({trial() {return {};}})[is](Object),
+    _ => maybe({trial: () => $Wrap(null)}).is(null),
+    _ => maybe({trial: () => 1 === 2})[is](Boolean),
+    _ => maybe({trial: () => 2/0}),
+    _ => maybe({trial: () => 2/0})[type],
+    _ => maybe({trial: () => 2/0})[is](Infinity),
+    _ => maybe({trial: () => {throw new Error(`error!`);}, whenError() {return `no!`}}),
+    _ => maybe({trial: () => {throw new Error(`error!`);}, whenError() {return `no!`}})[is](String),
+    _ => maybe({trial: () => {throw new TypeError(`no!`);}, whenError(err) {return err.name; }}),
+    _ => maybe({trial: () => {throw new TypeError(`no!`);}, whenError(err) {return err.name; }})[is](String),
+    
     t => `<div class="normal">
             <b>Proxy</b><br>
             A <code>Proxy</code> instance has no prototype,
@@ -186,7 +199,11 @@ function codeExamples() {
     _ => proxyEx[is](Proxy),
     _ => proxyEx[is](String),
     
-    t => `<div class="normal"><b>null, undefined, true, false</b></div>`,
+    t => `<div class="normal"><b>null, undefined, true, false</b>
+          <br><b>Note</b>: <code>null</code> and <code>undefined</code>
+          must always be wrapped. </div>`,
+    _ => maybe({trial: () => nil[type], whenError: () => `WRAPPED ${$Wrap(nil).type}`}),
+    _ => maybe({trial: () => undef[type], whenError: () => `WRAPPED ${$Wrap(undef).type}`}),
     _ => nil?.[type] ?? $Wrap(nil)[type],
     _ => $Wrap(nil)[is](undefined),
     _ => $Wrap(nil)[is](null),
@@ -200,7 +217,7 @@ function codeExamples() {
     _ => undef?.[is](undefined) ?? $Wrap(undef)[is](undefined),
     _ => undef?.[is](null, NaN) ?? $Wrap(undef)[is](null, NaN),
     
-    t => `<div class="normal"><b>'Nothingness'</b><br>
+    t => `<div class="normal"><b>'Nothingness'</b> (<code>isNothing</code>)<br>
           <code>isNothing</code> is a special
           function imported from the module.
           <br>It determines if a
@@ -239,6 +256,7 @@ function codeExamples() {
     _ => new Number(not_a_nr)[is](NaN),
     
     t => `<div class="normal"><b>Special cases</b>
+            (<code>IS(input, {isTypes: [...types], notTypes: [...types]|defaultValue: any})</code>)
             <div>When the second parameter (or the first, using the Object symbol extension or <code>$Wrap</code>)
               is an Object with key [<code>isTypes</code>] and one of the keys [<code>defaultValue</code>]
               or [<code>notTypes</code>], the <code>IS</code> function works like:
