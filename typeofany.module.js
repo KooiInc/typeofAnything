@@ -25,10 +25,11 @@ function TOAFactory() {
   
   function determineType(input, ...shouldBe) {
     let { compareWith, noInput, noShouldbe, inputCTOR, isNaN, isInfinity } = processInput(input, ...shouldBe);
+    
     switch(true) {
-      case input?.[Symbol.proxy] && shouldBe.length < 1: return input[Symbol.proxy];
-      case isNaN:  return shouldBe.length ? maybe({trial: _ => String(compareWith)}) === String(input) : `NaN`;
-      case isInfinity:  return shouldBe.length ? maybe({trial: _ => String(compareWith)}) === String(input) : `Infinity`;
+      case input?.[Symbol.proxy] && noShouldbe: return input[Symbol.proxy];
+      case isNaN:  return !noShouldbe ? maybe({trial: _ => String(compareWith)}) === String(input) : `NaN`;
+      case isInfinity:  return !noShouldbe ? maybe({trial: _ => String(compareWith)}) === String(input) : `Infinity`;
       case !!(noInput || noShouldbe): return noShouldbe ? String(input) === String(compareWith) : !compareWith ? String(input)  : false;
       case inputCTOR === Boolean: return !compareWith ? `Boolean` : inputCTOR === compareWith;
       default: return getResult(input, compareWith, getMe(input, inputCTOR));
@@ -53,10 +54,15 @@ function TOAFactory() {
   function getResult(input, shouldBeCTOR, me) {
     if (input?.[Symbol.proxy] && shouldBeCTOR === Proxy) { return shouldBeCTOR === Proxy; }
     if (maybe({trial: _ => String(shouldBeCTOR)}) === `NaN`) { return String(input) === `NaN`; }
+    if (input?.[Symbol.toStringTag] && IS(shouldBeCTOR, String)) {
+      return String(shouldBeCTOR) === input[Symbol.toStringTag];
+    }
     return shouldBeCTOR
       ? maybe({ trial: _ => input instanceof shouldBeCTOR, }) ||
         shouldBeCTOR === me || shouldBeCTOR === Object.getPrototypeOf(me) ||
-        `${shouldBeCTOR?.name}` === me?.name : me?.name;
+        `${shouldBeCTOR?.name}` === me?.name :
+          input?.[Symbol.toStringTag] && `[object ${input?.[Symbol.toStringTag]}]`|| me?.name;
+    
   }
   
   function ISOneOf(obj, ...params) {
