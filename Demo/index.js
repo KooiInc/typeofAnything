@@ -236,6 +236,11 @@ function codeExamples() {
     _ => isNothing(NaN, true),
     _ => isNothing(1/0),
     _ => isNothing(1/0, true),
+    _ => isNothing("hello!", true),
+    _ => isNothing(new Date(`error!`).getTime()),
+    _ => isNothing(new Date(`error!`).getTime(), true),
+    _ => isNothing(new Date()),
+    _ => isNothing(new Date(), true),
     
     t => `<div class="normal"><b>0 (zero)</b></div>`,
     _ => zero[type],
