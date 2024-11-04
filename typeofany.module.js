@@ -65,7 +65,7 @@ function TOAFactory() {
   
   function isNothing(maybeNothing, all = false) {
     let nada = maybeNothing === null || maybeNothing === undefined;
-    nada = all ? nada || maybeNothing === Infinity || isNaN(maybeNothing) : nada;
+    nada = all ? nada || IS(maybeNothing, Infinity) || IS(maybeNothing, NaN) : nada;
     return nada;
   }
   
