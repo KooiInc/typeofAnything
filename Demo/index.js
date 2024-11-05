@@ -281,18 +281,15 @@ function codeExamples() {
     
     t => `<div class="normal" id="tostringtag" data-content-text="toStringTag"><b>toStringTag</b>:
             use <code>Symbol.toStringTag</code> for reporting/checking 'types'.
-          <div>A number of ES20xx Objects contain the 'well known Symbol'
-            <code>Symbol.toStringTag</code> in their prototype. Such objects
-            use that Symbol for their string representation (<code>toString</code>).
-            When available <code>IS(input)</code> or <code>[type]</code> reports
-            that as the 'type' of the input between square brackets.
-            <br>Such 'types' are <i>not always available</i> as known constructors in
-            the (global) namespace (as <code>HTMLElement</code> or <code>RegExp</code> do),
-            so you can't always use (for example)
-            <br><code>IS(new Float32Array(1), Float32Array)</code>,
-            <br>...but you <i>can</i> use a string here:
-            <br><code>IS(new Float32Array(1), "Float32Array")</code>
-            <br>See also: <a target="_blank"
+          <div>
+            A number of ES20xx Objects contain the 'well known Symbol' <code>Symbol.toStringTag</code>
+            in their prototype. Such objects use that Symbol for their string representation (<code>toString</code>).
+            Such 'types' are not always available as known constructors in the (global) namespace
+            (like for example <code>HTMLElement</code> or <code>RegExp</code> are), so one can't always use (for example)
+            <code>IS(new Float32Array(1), Float32Array)</code>).
+            <br>One can check such non-available global constructors using their string representation,
+            <br>e.g. <code>IS(new Float32Array(1), "Float32Array")</code>
+            <br><br>See also: <a target="_blank"
               href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/toStringTag"
               >MDN documentation</a></div>
           </div>`,
