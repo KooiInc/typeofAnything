@@ -1,151 +1,117 @@
 body {
   font: 14px / 17px system-ui, sans-serif;
   margin: 1rem;
-}
 
-code {
-  color: green;
-  background-color: rgb(238, 238, 238);
-  padding: 2px;
-  font-family: monospace;
-}
+  h3 {
+    margin: 1rem 0 0.2rem 0;
+  }
 
-code.codeblock {
-  display: block;
-  padding: 6px;
-  border: 1px solid rgb(153, 153, 153);
-  margin: 0.5rem 0px;
-  background-color: rgb(238, 238, 238);
-  white-space: pre-wrap;
-}
+  a {
+    text-decoration: none;
+    font-weight: bold;
+  }
 
-h3 {
-  margin-top: 1.5rem;
-}
+  a:hover {
+    text-decoration: underline;
+  }
 
-.thickBorder {
-  border: 5px solid green;
-  padding: 0.5rem;
-  display: inline-block;
-}
+  a[target]::before, a.internalLink::before, a.externalLink::before {
+    color: rgba(0, 0, 238, 0.7);
+    font-size: 1.1rem;
+    padding-right: 2px;
+    vertical-align: baseline;
+  }
 
-a.ExternalLink {
-  text-decoration: none;
-  color: rgb(0, 0, 238);
-  background-color: rgb(238, 238, 238);
-  padding: 3px;
-  font-weight: bold;
-}
+  a[target="_blank"]::before, a.externalLink::before {
+    content: "↗";
+  }
 
-.cmmt {
-  color: rgb(136, 136, 136);
-}
+  a[data-top]::before, a.internalLink::before, a[target="_top"]::before {
+    content: "↺";
+  }
 
-.hidden {
-  display: none;
-}
+  .hidden {
+    display: none;
+  }
 
-.attention {
-  color: red;
-  font-size: 1.2em;
-  font-weight: bold;
-}
+  .err {
+    font-style: italic;
+    color: red;
+  }
 
-#log2screen li {
-  list-style: "✓";
-  padding-left: 6px;
-  margin: 0.5rem 0px 0px -1.2rem;
-  font-family: monospace;
-}
+  .container {
+    inset: 0;
+    position: absolute;
 
-#log2screen li.head {
-  list-style-type: none;
-  font-weight: bold;
-  margin-top: 0.8rem;
-  margin-bottom: -0.2rem;
-  font-family: revert;
-}
-
-.err {
-  font-style: italic;
-  color: red;
-}
-
-a {
-  text-decoration: none;
-  font-weight: bold;
-}
-
-a:hover {
-  text-decoration: underline;
-}
-
-a[target]::before, a.internalLink::before, a.externalLink::before {
-  color: rgba(0, 0, 238, 0.7);
-  font-size: 1.1rem;
-  padding-right: 2px;
-  vertical-align: baseline;
-}
-
-a[target="_blank"]::before, a.externalLink::before {
-  content: "↗";
-}
-
-a[data-top]::before, a.internalLink::before, a[target="_top"]::before {
-  content: "↺";
-}
-
-.container {
-  inset: 0px;
-  position: absolute;
-
-  & #log2screen {
-    position: relative;
-    margin: 0px auto;
-    max-width: 800px;
-
-    & code {
-      padding: 0px 3px !important;
+    code:not(.language-javascript) {
+      background-color: rgb(227, 230, 232);
+      color: rgb(12, 13, 14);
+      padding: 2px 4px;
+      display: inline;
+      border-radius: 4px;
+      margin: 1px 0;
     }
 
-    & li {
-      margin: 0.5rem 0.6rem 0px -0.6rem;
+    #log2screen {
+      position: relative;
+      margin: 0 auto;
+      max-width: 800px;
 
-      & code:not(.language-javascript) {
-        background-color: rgb(227, 230, 232);
-        color: rgb(12, 13, 14);
-        padding: 2px 4px;
-        display: inline;
-        border-radius: 4px;
-        margin: 1px 0px;
-      }
+      li {
+        margin-top: 0.1rem;
+        font: revert;
+        font-size: 1.1em;
+        line-height: 1.4rem;
+        padding: 0 5px;
+        margin-left: -1.2rem;
+        list-style: "✓";
 
-      &:last-child {
-        padding-bottom: 2rem;
-      }
+        ul {
+          margin: 0;
+          li {
+            margin-top: 0.1rem;
+            font: revert;
+            padding: 0px 5px;
+            margin-left: -1.2rem;
 
-      &.head .normal {
-        font-weight: normal;
-        line-height: 20px;
-        margin: 12px 0px 6px;
-        color: rgb(69, 104, 161);
-
-        & b {
-          color: rgb(179, 21, 55);
+            &:last-child {
+              padding-bottom: revert;
+            }
+          }
         }
 
-        & li {
-          margin-top: 0.1rem;
-          font: revert;
-          padding: 0px 5px;
-          margin-left: -1.2rem;
+        &:last-child {
+          padding-bottom: 2rem;
         }
-      }
 
-      &.head code.language-javascript {
-        background-color: revert;
-        color: revert;
+        &.head {
+          list-style-type: none;
+          font-weight: bold;
+          margin: 0.8rem 0 0 -2rem;
+          font-family: revert;
+
+          code.language-javascript {
+            background-color: revert;
+            color: revert;
+          }
+
+          .normal {
+            font-weight: normal;
+            line-height: 20px;
+            margin: 12px 0 6px;
+            color: rgb(69, 104, 161);
+            padding-bottom: 0.2em;
+            border-bottom: 1px dotted #777;
+
+            b {
+              color: rgb(179, 21, 55);
+            }
+          }
+        }
       }
     }
   }
 }
+
+
+
