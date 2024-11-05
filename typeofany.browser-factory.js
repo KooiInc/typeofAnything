@@ -4,9 +4,10 @@ function TOAFactory() {
   Symbol.type = Symbol.for(`toa.type`);
   Symbol.any = Symbol.for(`toa.any`);
   addSymbols2Anything();
+  const maybe = maybeFactory();
   const [$Wrap, xProxy] = [WrapAnyFactory(), setProxyFactory()];
   xProxy.custom();
-  return { IS, maybe: maybeFactory(), $Wrap, isNothing, xProxy };
+  return { IS, maybe, $Wrap, isNothing, xProxy };
   
   function IS(anything, ...shouldBe) {
     if (shouldBe.length && shouldBe[0]?.isTypes) {
@@ -22,10 +23,11 @@ function TOAFactory() {
   
   function determineType(input, ...shouldBe) {
     let { compareWith, noInput, noShouldbe, inputCTOR, isNaN, isInfinity } = processInput(input, ...shouldBe);
+    
     switch(true) {
-      case input?.[Symbol.proxy] && shouldBe.length < 1: return input[Symbol.proxy];
-      case isNaN:  return shouldBe.length ? maybe({trial: _ => String(compareWith)}) === String(input) : `NaN`;
-      case isInfinity:  return shouldBe.length ? maybe({trial: _ => String(compareWith)}) === String(input) : `Infinity`;
+      case input?.[Symbol.proxy] && noShouldbe: return input[Symbol.proxy];
+      case isNaN:  return !noShouldbe ? maybe({trial: _ => String(compareWith)}) === String(input) : `NaN`;
+      case isInfinity:  return !noShouldbe ? maybe({trial: _ => String(compareWith)}) === String(input) : `Infinity`;
       case !!(noInput || noShouldbe): return noShouldbe ? String(input) === String(compareWith) : !compareWith ? String(input)  : false;
       case inputCTOR === Boolean: return !compareWith ? `Boolean` : inputCTOR === compareWith;
       default: return getResult(input, compareWith, getMe(input, inputCTOR));
@@ -50,10 +52,15 @@ function TOAFactory() {
   function getResult(input, shouldBeCTOR, me) {
     if (input?.[Symbol.proxy] && shouldBeCTOR === Proxy) { return shouldBeCTOR === Proxy; }
     if (maybe({trial: _ => String(shouldBeCTOR)}) === `NaN`) { return String(input) === `NaN`; }
+    if (input?.[Symbol.toStringTag] && IS(shouldBeCTOR, String)) {
+      return String(shouldBeCTOR) === input[Symbol.toStringTag];
+    }
     return shouldBeCTOR
       ? maybe({ trial: _ => input instanceof shouldBeCTOR, }) ||
         shouldBeCTOR === me || shouldBeCTOR === Object.getPrototypeOf(me) ||
-        `${shouldBeCTOR?.name}` === me?.name : me?.name;
+        `${shouldBeCTOR?.name}` === me?.name :
+          input?.[Symbol.toStringTag] && `[object ${input?.[Symbol.toStringTag]}]`|| me?.name;
+    
   }
   
   function ISOneOf(obj, ...params) {
@@ -108,12 +115,12 @@ function TOAFactory() {
   }
   
   function setProxyFactory() {
-    const nativeProxy = window.Proxy;
+    const nativeProxy = Proxy;
     return {
-      native() { window.Proxy = nativeProxy; },
+      native() { Proxy = nativeProxy; },
       custom() {
         // adaptation of https://stackoverflow.com/a/53463589
-        window.Proxy = new nativeProxy(nativeProxy, {
+        Proxy = new nativeProxy(nativeProxy, {
           construct(target, args) {
             const proxy = new target(...args);
             proxy[Symbol.proxy] = `Proxy (${determineType(args[0])})`;
