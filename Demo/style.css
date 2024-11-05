@@ -97,7 +97,7 @@ body {
 
           .normal {
             font-weight: normal;
-            line-height: 20px;
+            line-height: 1.4rem;
             margin: 12px 0 6px;
             color: rgb(69, 104, 161);
             padding-bottom: 0.2em;
