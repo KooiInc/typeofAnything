@@ -29,7 +29,9 @@ function getHeader() {
   return t => `<p>${backLink}
     | <a target="_blank" href="https://www.npmjs.com/package/typeofanything">@NPM</a></p>
     <div class="normal"><h3>TypeofAnything: determine/check the type of nearly any (ECMAScript) thing</h3>
-      (including null/undefined/NaN/true/false etc.)</div>
+      (including null/undefined/NaN/true/false etc.)
+    </div>
+    <div class="normal noborder"><h3>Code used for examples</h3></div>
     <code class="block">
     // import & initialize
     import { 
@@ -80,7 +82,7 @@ function codeExamples() {
   
   return [
     getHeader(),
-    t => `<div class="normal"><b>The IS function</b></div>`,
+    t => `<div class="normal" id="IS" data-content-text="The IS function"><b>The IS function</b></div>`,
     _ => IS([]),
     _ => IS([], Array),
     _ => IS("nothing", Array, String),
@@ -92,7 +94,7 @@ function codeExamples() {
     _ => IS({} + [], String /* ES peculiarity */),
     _ => IS(true + false, Number /* ES peculiarity */),
 
-    t => `<div class="normal"><b>The Object symbolic extension</b></div>`,
+    t => `<div class="normal" id="symbolicExt" data-content-text="The Object symbolic extension"><b>The Object symbolic extension</b></div>`,
     _ => [][type],
     _ => [][is](Map),
     _ => ({})[is](Array),
@@ -108,7 +110,7 @@ function codeExamples() {
     _ => ({})[Symbol.is](Array),
     _ => [][Symbol.is](Object /* up the prototoype chain */),
 
-    t => `<div class="normal"><b>The <i>static</i> Object symbolic extension</b></div>`,
+    t => `<div class="normal" id="staticSymbol" data-content-text="The <i>static</i> Object symbolic extension"><b>The <i>static</i> Object symbolic extension</b></div>`,
     _ => Object[type](`Hello`),
     _ => Object[is]([], Map),
     _ => Object[is]([], Array),
@@ -117,7 +119,7 @@ function codeExamples() {
     _ => Object[is](not_a_nr, NaN, Number),
     _ => Object[is](`Hello world`, NaN, Number, String),
 
-    t => `<div class="normal"><b>The wrapper <code>$Wrap</code></b></div>`,
+    t => `<div class="normal" id="wrapper" data-content-text="The wrapper <code>$Wrap</code>"><b>The wrapper <code>$Wrap</code></b></div>`,
     _ => $Wrap([])[type],
     _ => $Wrap([]).type,
     _ => $Wrap([])[is](Map),
@@ -131,7 +133,7 @@ function codeExamples() {
     _ => null?.[type] ?? $Wrap(null).type,
     _ => undefined?.[is](undefined) ?? $Wrap(undefined).is(undefined),
 
-    t => `<div class="normal"><b>The <code>maybe</code> function</b></div>`,
+    t => `<div class="normal" id="maybe" data-content-text="The <code>maybe</code> function"><b>The <code>maybe</code> function</b></div>`,
     _ => maybe({trial() {return {};}})[is](Object),
     _ => maybe({trial: () => $Wrap(null)}).is(null),
     _ => maybe({trial: () => 1 === 2})[is](Boolean),
@@ -143,7 +145,7 @@ function codeExamples() {
     _ => maybe({trial: () => {throw new TypeError(`no!`);}, whenError(err) {return err.name; }}),
     _ => maybe({trial: () => {throw new TypeError(`no!`);}, whenError(err) {return err.name; }})[is](String),
 
-    t => `<div class="normal">
+    t => `<div class="normal" id="proxy" data-content-text="Proxy 'type'">
             <b>Proxy</b><br>
             A <code>Proxy</code> instance has no prototype,
             it is designed to be transparent to the proxied Object.
@@ -164,7 +166,6 @@ function codeExamples() {
     _ => proxyEx[is](Proxy),
     _ => proxyEx[is](String),
 
-    // TODO
     t => xProxy.native(),
     t => `<div class="normal">When we reset <code>Proxy</code>
           to its initial constructor (using <code>xProxy.native()</code>),
@@ -174,15 +175,17 @@ function codeExamples() {
     _ => new Proxy(new Date(), {})[type],
     _ => new Proxy(new Date(), {})[is](Date),
 
-    t => `<div class="normal"><b>Note</b>: <code>proxyEx</code> was assigned with the modified
+    t => `<div class="normal">
+          <b>Note</b>: <code>proxyEx</code> was assigned with the modified
            <code>Proxy</code> constructor, so:</div>`,
     _ => proxyEx[type],
     _ => proxyEx[is](Proxy),
     _ => proxyEx[is](String),
 
-    t => `<div class="normal"><b>null, undefined, true, false</b>
-          <br><b>Note</b>: <code>null</code> and <code>undefined</code>
-          must always be wrapped. </div>`,
+    t => `<div class="normal" id="nulletc" data-content-text="null, undefined, true, false">
+            <b>null, undefined, true, false</b>
+            <br><b>Note</b>: <code>null</code> and <code>undefined</code>
+            must always be wrapped. </div>`,
     _ => maybe({trial: () => nil[type], whenError: () => `WRAPPED ${$Wrap(nil).type}`}),
     _ => maybe({trial: () => undef[type], whenError: () => `WRAPPED ${$Wrap(undef).type}`}),
     _ => nil?.[type] ?? $Wrap(nil)[type],
@@ -198,7 +201,7 @@ function codeExamples() {
     _ => undef?.[is](undefined) ?? $Wrap(undef)[is](undefined),
     _ => undef?.[is](null, NaN) ?? $Wrap(undef)[is](null, NaN),
 
-    t => `<div class="normal"><b>'Nothingness'</b> (<code>isNothing</code>)<br>
+    t => `<div class="normal" id="nothing" data-content-text="'Nothingness'</b> (<code>isNothing</code>)"><b>'Nothingness'</b> (<code>isNothing</code>)<br>
           <code>isNothing</code> is a special
           function imported from the module.
           <br>It determines if a
@@ -222,7 +225,7 @@ function codeExamples() {
     _ => isNothing(new Date()),
     _ => isNothing(new Date(), true),
 
-    t => `<div class="normal"><b>0 (zero)</b></div>`,
+    t => `<div class="normal" id="zero" data-content-text="0 (zero)"><b>0 (zero)</b></div>`,
     _ => zero[type],
     _ => zero[is](Boolean /* should be false */),
     _ => zero[is](Number /* literal is Number */),
@@ -230,7 +233,7 @@ function codeExamples() {
     _ => new Number(zero)[is](Number),
     _ => new Number(zero)[is](Object /*<br>&nbsp;&nbsp;Up the prototype chain, Number instance is also Object */),
 
-    t => `<div class="normal"><b>NaN</b></div>`,
+    t => `<div class="normal" id="nan" data-content-text="NaN"><b>NaN</b></div>`,
     _ => typeof not_a_nr,
     _ => not_a_nr[is](Number /* by design we DON'T consider NaN to be Number */),
     _ => not_a_nr[type],
@@ -241,7 +244,7 @@ function codeExamples() {
     _ => new Number(not_a_nr)[type],
     _ => new Number(not_a_nr)[is](NaN),
 
-    t => `<div class="normal"><b>Special cases</b>
+    t => `<div class="normal" id="specials" data-content-text="Special cases"><b>Special cases</b>
             (<code>IS(input, {isTypes: [...types], notTypes: [...types]|defaultValue: any})</code>)
             <div>When the second parameter (or the first, using the Object symbol extension or <code>$Wrap</code>)
               is an Object with key [<code>isTypes</code>] and one of the keys [<code>defaultValue</code>]
@@ -275,23 +278,8 @@ function codeExamples() {
     _ => new Proxy(new Date(), {})[type],
     _ => new Proxy(new Date(), {})[is]({isTypes: Proxy, notTypes: Date}),
     _ => new Proxy(new Date(), {})[is]({isTypes: Date, notTypes: Proxy}),
-
-    t => `<div class="normal"><b>More examples</b></div>`,
-    _ => /[a-z]/[type],
-    _ => /[a-z]/[is](RegExp),
-    _ => /[a-z]/[is](Array),
-    _ => ``[type],
-    _ => new SomeCTOR("yada")[type],
-    _ => new SomeCTOR("yada")[is](SomeCTOR),
-    _ => new SomeCTOR("yada")[is](Object /* up the prototype chain */),
-    _ => Symbol(`me`)[is](Symbol),
-    _ => div[is](Node),
-    _ => div[is](HTMLElement),
-    _ => div[is](HTMLDivElement),
-    _ => div[is](HTMLUListElement),
-    _ => div[is](HTMLUListElement, HTMLAreaElement, Node),
     
-    t => `<div class="normal"><b>toStringTag</b>:
+    t => `<div class="normal" id="tostringtag" data-content-text="toStringTag"><b>toStringTag</b>:
             use <code>Symbol.toStringTag</code> for reporting/checking 'types'.
           <div>A number of ES20xx Objects contain the 'well known Symbol'
             <code>Symbol.toStringTag</code> in their prototype. Such objects
@@ -345,6 +333,21 @@ function codeExamples() {
     _ => function* () {}[type],
     _ => function* () {}[is](Function),
     _ => function* () {}[is](`GeneratorFunction`),
+    
+    t => `<div class="normal" id="more" data-content-text="More examples"><b>More examples</b></div>`,
+    _ => /[a-z]/[type],
+    _ => /[a-z]/[is](RegExp),
+    _ => /[a-z]/[is](Array),
+    _ => ``[type],
+    _ => new SomeCTOR("yada")[type],
+    _ => new SomeCTOR("yada")[is](SomeCTOR),
+    _ => new SomeCTOR("yada")[is](Object /* up the prototype chain */),
+    _ => Symbol(`me`)[is](Symbol),
+    _ => div[is](Node),
+    _ => div[is](HTMLElement),
+    _ => div[is](HTMLDivElement),
+    _ => div[is](HTMLUListElement),
+    _ => div[is](HTMLUListElement, HTMLAreaElement, Node),
   ]
 }
 
@@ -357,8 +360,21 @@ function toCode(str, res) {
       : res}`;
 }
 
-function wrap2Container() {
-  $(`<div class="container">`).append($(`ul#log2screen`));
+function addContentIndex() {
+  const contentElements = document.querySelectorAll(`[data-content-text]`);
+  const ul = Object.assign(document.createElement("ul"), {classList: `content`});
+  ul.insertAdjacentHTML(`beforeend`, `<li class="head"><h3>Content</h3></li>`);
+  contentElements.forEach(element => {
+    ul.insertAdjacentHTML(`beforeend`,
+      `<li><a href="#${element.id}">${element.dataset.contentText}</a></li>`);
+    element.querySelector(`b`).title = "Content ↑";
+  });
+  const normalDiv = Object.assign(document.createElement("div"),
+    {classList: `normal top noborder`});
+  normalDiv.append(ul);
+  document.querySelector(`#log2screen li:first-child .normal`)
+    .insertAdjacentElement(`afterend`, normalDiv);
+  
 }
 
 function logExampleCB(example) {
@@ -377,8 +393,15 @@ function logExampleCB(example) {
 }
 
 function printExamples() {
+  document.addEventListener(`click`, handle);
   codeExamples().forEach(logExampleCB);
+  addContentIndex();
 }
+
+function handle(evt) {
+  if (evt.target.closest(`[data-content-text]`)) {
+    return document.querySelector(`#log2screen li:first-child`).scrollIntoView();
+  }}
 
 function logFactory(formatJSON = true) {
   const logContainer = document.querySelector(`#log2screen`);
