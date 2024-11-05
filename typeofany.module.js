@@ -7,9 +7,10 @@ function TOAFactory() {
   Symbol.type = Symbol.for(`toa.type`);
   Symbol.any = Symbol.for(`toa.any`);
   addSymbols2Anything();
+  const maybe = maybeFactory();
   const [$Wrap, xProxy] = [WrapAnyFactory(), setProxyFactory()];
   xProxy.custom();
-  return { IS, maybe: maybeFactory(), $Wrap, isNothing, xProxy };
+  return { IS, maybe, $Wrap, isNothing, xProxy };
   
   function IS(anything, ...shouldBe) {
     if (shouldBe.length && shouldBe[0]?.isTypes) {
@@ -117,12 +118,12 @@ function TOAFactory() {
   }
   
   function setProxyFactory() {
-    const nativeProxy = window.Proxy;
+    const nativeProxy = Proxy;
     return {
-      native() { window.Proxy = nativeProxy; },
+      native() { Proxy = nativeProxy; },
       custom() {
         // adaptation of https://stackoverflow.com/a/53463589
-        window.Proxy = new nativeProxy(nativeProxy, {
+        Proxy = new nativeProxy(nativeProxy, {
           construct(target, args) {
             const proxy = new target(...args);
             proxy[Symbol.proxy] = `Proxy (${determineType(args[0])})`;
