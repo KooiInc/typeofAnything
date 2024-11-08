@@ -9,6 +9,9 @@ const type = Symbol.type;
 
 // -----------------------------------
 const printHTML = html => html.replace(/</g, `&lt;`);
+window.IS = IS;
+let [nTests, failed, succeeded] = [0, 0, 0];
+const resultBox = createResultBox();
 printExamples();
 
 document.querySelectorAll(`code.block`)
@@ -26,10 +29,12 @@ function getHeader() {
   const backLink = /github\.io|localhost/i.test(location.href)
     ? `<a target="_top" href="https://github.com/KooiInc/typeofAnything">Back to repository</a>`
     : `<a target="_top" href="https://stackblitz.com/@KooiInc">All projects</a>`;
-  return t => `<p>${backLink}
+  return `!!<p>${backLink}
     | <a target="_blank" href="https://www.npmjs.com/package/typeofanything">@NPM</a></p>
     <div class="normal"><h3>TypeofAnything: determine/check the type of nearly any (ECMAScript) thing</h3>
-      (including null/undefined/NaN/true/false etc.)
+      (including null/undefined/NaN/true/false etc.).
+      <br><b>Note</b> Every example is a <i>test</i> for the given code. The 'received' value is the
+      result of the code.
     </div>
     <div class="normal noborder"><h3>Code used for examples</h3></div>
     <code class="block">
@@ -62,7 +67,28 @@ function getHeader() {
       return new Proxy(new String("hello"), { 
         get(obj, key) { return key === 'world' ? (obj += " world") && obj : obj[key] }
       });
-    }</code>` .replace(/\n {4}/g, `\n`);
+    }</code>`.replace(/\n {4}/g, `\n`);
+}
+
+function test(testFn, expected) {
+  nTests += 1;
+  const fnStr = testFn.toString().trim();
+  
+  let result = maybe({trial: testFn, whenError: err => testError(err, fnStr)});
+  if (result === `FAIL`) { failed += 1; return; }
+  
+  expected = IS(expected, String) ? `"${expected}"` : expected;
+  result = IS(result, String) ? `"${result}"` : result;
+  const resultStr = `(expected <i>${expected}</i>, received <i>${result}</i>)`;
+  
+  if (result ===  expected) {
+    succeeded += 1;
+    return log(`<div class="ok">${toCode(fnStr.slice(4), result)}
+      <span><b>=> OK</b> ${resultStr}</span></div>`);
+  }
+  failed += 1;
+  return log(`<div class="testErr">${toCode(fnStr.slice(4))}
+    <span><b>=> NOT OK</b> ${resultStr}</span></div>`);
 }
 
 function codeExamples() {
@@ -80,70 +106,89 @@ function codeExamples() {
     });
   }
   
+  log(getHeader());
+  
   return [
-    getHeader(),
     t => `<div class="normal" id="IS" data-content-text="The IS function"><b>The IS function</b></div>`,
-    _ => IS([]),
-    _ => IS([], Array),
-    _ => IS("nothing", Array, String),
-    _ => IS("nothing", Object, HTMLElement, null, NaN, undefined, Infinity),
-    _ => IS(div, Node),
-    _ => IS(not_a_nr, NaN),
-    _ => IS(1/0, Infinity),
-    _ => IS(flse),
-    _ => IS({} + [], String /* ES peculiarity */),
-    _ => IS(true + false, Number /* ES peculiarity */),
-
+    _ => test(_ => IS([]), `Array`),
+    _ => test(_ => IS([], Array), true),
+    _ => test(_ => IS("nothing", Array, String), true),
+    _ => test(_ => IS("nothing", Object, HTMLElement, null, NaN, undefined, Infinity), false),
+    _ => test(_ => IS("nothing", String, null, NaN, undefined, Infinity), true),
+    _ => test(_ => IS(div, Node), true),
+    _ => test(_ => IS(), `undefined`),
+    _ => test(_ => IS(nil), `null`),
+    _ => test(_ => IS(not_a_nr), `NaN`),
+    _ => test(_ => IS(not_a_nr, NaN), true),
+    _ => test(_ => IS(1/0, Infinity), true),
+    _ => test(_ => IS(flse), `Boolean`),
+    _ => test(_ => IS({} + [], String /* ES peculiarity */), true),
+    _ => test(_ => IS(true + false, Number /* ES peculiarity */), true),
+    
     t => `<div class="normal" id="symbolicExt" data-content-text="The Object symbolic extension"><b>The Object symbolic extension</b></div>`,
-    _ => [][type],
-    _ => [][is](Map),
-    _ => ({})[is](Array),
-    _ => [][is](Object /* up the prototoype chain */),
-    _ => `Hello World`[type],
-    _ => `Hello World`[is](String),
-    _ => `Hello World`[is](Object),
-    _ => new String(`Hello World`)[is](Object),
+    _ => test(_ => [][type], `Array`),
+    _ => test(_ => [][is](Map), false),
+    _ => test(_ => ({})[is](Array), false),
+    _ => test(_ => [][is](Object /* up the prototoype chain */), true),
+    _ => test(_ => `Hello World`[type], `String`),
+    _ => test(_ => `Hello World`[is](String), true),
+    _ => test(_ => `Hello World`[is](Object), false),
+    _ => test(_ => new String(`Hello World`)[is](Object), true),
 
     t => `<div class="normal"><b>Note</b>: one can also use <code>Symbol.type/Symbol.is</code> directly</div>`,
-    _ => [][Symbol.type],
-    _ => [][Symbol.is](Map),
-    _ => ({})[Symbol.is](Array),
-    _ => [][Symbol.is](Object /* up the prototoype chain */),
+    _ => test(_ => [][Symbol.type], `Array`),
+    _ => test(_ => [][Symbol.is](Map), false),
+    _ => test(_ => ({})[Symbol.is](Array), false),
+    _ => test(_ => [][Symbol.is](Object /* up the prototoype chain */), true),
 
     t => `<div class="normal" id="staticSymbol" data-content-text="The <i>static</i> Object symbolic extension"><b>The <i>static</i> Object symbolic extension</b></div>`,
-    _ => Object[type](`Hello`),
-    _ => Object[is]([], Map),
-    _ => Object[is]([], Array),
-    _ => Object[is](not_a_nr, Number),
-    _ => Object[Symbol.is](not_a_nr, NaN),
-    _ => Object[is](not_a_nr, NaN, Number),
-    _ => Object[is](`Hello world`, NaN, Number, String),
+    _ => test(_ => Object[type](`Hello`), `String`),
+    _ => test(_ => Object[is]([], Map), false),
+    _ => test(_ => Object[is]([], Array), true),
+    _ => test(_ => Object[is](not_a_nr, Number), false),
+    _ => test(_ => Object[Symbol.is](not_a_nr, NaN), true),
+    _ => test(_ => Object[is](not_a_nr, NaN, Number), true),
+    _ => test(_ => Object[is](`Hello world`, NaN, Number, String), true),
+    
+    t => `<div class="normal" id="directStrict" data-content-text="Direct comparison">
+      <b>Direct comparison</b>.
+        <br>One can use the <code>IS</code> function
+        or <code>Symbol.is</code> extension just for (<i>strict</i>) comparison of two values
+        <br>So: <code>x[is](y)</code> or <code>IS(x, y)</code>
+        are equivalents of <code>x <b>===</b> y</code>.</div>`,
+    _ => test(_ => {let [x,y] = ["hello", "Hello"]; return y[is](x);}, false),
+    _ => test(_ => {let [x,y] = ["Hello", "Hello"]; return y[is](x);}, true),
+    _ => test(_ => {let [x,y] = [undefined, "Hello"]; return x?.[is](y) ?? `${x} !== ${y}`;}, `undefined !== Hello`),
+    _ => test(_ => {let [x,y,z] = [42, 21, 3]; return x[is](z*y);}, false),
+    _ => test(_ => {let [x,y,z] = [42, 21, 2]; return y[is](x/z);}, true),
+    _ => test(_ => {let [x,y] = [{a: 2}, {a: 2}]; return y[is](x);}, false),
 
     t => `<div class="normal" id="wrapper" data-content-text="The wrapper <code>$Wrap</code>"><b>The wrapper <code>$Wrap</code></b></div>`,
-    _ => $Wrap([])[type],
-    _ => $Wrap([]).type,
-    _ => $Wrap([])[is](Map),
-    _ => $Wrap([])[is](Array),
-    _ => $Wrap([]).is(Array),
-    _ => $Wrap().type,
-    _ => $Wrap().is(null),
-    _ => $Wrap().is(null, undefined),
+    _ => test(_ => $Wrap([])[type], `Array`),
+    _ => test(_ => $Wrap([]).type, `Array`),
+    _ => test(_ => $Wrap([])[is](Map), false),
+    _ => test(_ => $Wrap([])[is](Array), true),
+    _ => test(_ => $Wrap([]).is(Array), true),
+    _ => test(_ => $Wrap().type, `undefined`),
+    _ => test(_ => $Wrap().is(null), false),
+    _ => test(_ => $Wrap(undef).is(null, undefined), true),
     t => `<div class="normal"><b>Note</b>: <code>null</code> and <code>undefined</code>
            can <i>only</i> be checked using the wrapper</div>`,
-    _ => null?.[type] ?? $Wrap(null).type,
-    _ => undefined?.[is](undefined) ?? $Wrap(undefined).is(undefined),
+    _ => test(_ => null?.[type] ?? $Wrap(null).type, `null`),
+    _ => test(_ => undefined?.[is](undefined) ?? $Wrap(undefined).is(undefined), true),
 
     t => `<div class="normal" id="maybe" data-content-text="The <code>maybe</code> function"><b>The <code>maybe</code> function</b></div>`,
-    _ => maybe({trial() {return {};}})[is](Object),
-    _ => maybe({trial: () => $Wrap(null)}).is(null),
-    _ => maybe({trial: () => 1 === 2})[is](Boolean),
-    _ => maybe({trial: () => 2/0}),
-    _ => maybe({trial: () => 2/0})[type],
-    _ => maybe({trial: () => 2/0})[is](Infinity),
-    _ => maybe({trial: () => {throw new Error(`error!`);}, whenError() {return `no!`}}),
-    _ => maybe({trial: () => {throw new Error(`error!`);}, whenError() {return `no!`}})[is](String),
-    _ => maybe({trial: () => {throw new TypeError(`no!`);}, whenError(err) {return err.name; }}),
-    _ => maybe({trial: () => {throw new TypeError(`no!`);}, whenError(err) {return err.name; }})[is](String),
+    _ => test(_ => maybe({trial() {return {};}})[is](Object), true),
+    _ => test(_ => maybe({trial: () => $Wrap(null)}).is(null), true),
+    _ => test(_ => maybe({trial: () => 1 === 2})[is](Boolean), true),
+    _ => test(_ => maybe({trial: () => 2/0}), Infinity),
+    _ => test(_ => maybe({trial: () => 2/0})[type], `Infinity`),
+    _ => test(_ => maybe({trial: () => 2/0})[is](Infinity), true),
+    _ => test(_ => maybe({trial: () => {throw new Error(`error!`);}, whenError() {return `no!`}}), `no!`),
+    _ => test(_ => maybe({trial: () => {throw new Error(`error!`);}, whenError() {return `no!`}})[is](`no!`), true),
+    _ => test(_ => maybe({trial: () => {throw new Error(`error!`);}, whenError() {return `no!`}})[is](String), true),
+    _ => test(_ => maybe({trial: () => {throw new TypeError(`no!`);}, whenError(err) {return err.name; }}), `TypeError`),
+    _ => test(_ => maybe({trial: () => {throw new TypeError(`no!`);}, whenError(err) {return err.name; }})[is](String), true),
 
     t => `<div class="normal" id="proxy" data-content-text="Proxy 'type'">
             <b>Proxy</b><br>
@@ -157,49 +202,51 @@ function codeExamples() {
             <br>With it the result of checking the type of a <code>Proxy</code>
               instance is now:
             <br><code>"Proxy ([type of the proxified original])"</code>.</div>`,
-    _ => new Proxy({}, {})[type],
-    _ => new Proxy(new String(), {})[type],
-    _ => new Proxy(new Date(), {})[type],
-    _ => new Proxy(new Date(), {})[is](Date),
-    _ => new Proxy(new Date(), {})[is](Proxy),
-    _ => proxyEx[type],
-    _ => proxyEx[is](Proxy),
-    _ => proxyEx[is](String),
+    _ => test(_ => new Proxy({}, {})[type], `Proxy (Object)`),
+    _ => test(_ => new Proxy(new String(), {})[type], `Proxy (String)`),
+    _ => test(_ => new Proxy(new Date(), {})[type], `Proxy (Date)`),
+    _ => test(_ => new Proxy(new Date(), {})[is](Date), true),
+    _ => test(_ => new Proxy(new Date(), {})[is](Proxy), true),
+    _ => test(_ => proxyEx[type], `Proxy (String)`),
+    _ => test(_ => proxyEx[is](Proxy), true),
+    _ => test(_ => proxyEx[is](String), true),
 
     t => xProxy.native(),
     t => `<div class="normal">When we reset <code>Proxy</code>
           to its initial constructor (using <code>xProxy.native()</code>),
           the results are:</div>`,
-    _ => new Proxy({}, {})[type],
-    _ => new Proxy(new String(), {})[type],
-    _ => new Proxy(new Date(), {})[type],
-    _ => new Proxy(new Date(), {})[is](Date),
+    _ => test(_ => new Proxy({}, {})[type], `Object`),
+    _ => test(_ => new Proxy(new String(), {})[type], `String`),
+    _ => test(_ => new Proxy(new Date(), {})[type], `Date`),
+    _ => test(_ => new Proxy(new Date(), {})[is](Date), true),
 
     t => `<div class="normal">
           <b>Note</b>: <code>proxyEx</code> was assigned with the modified
            <code>Proxy</code> constructor, so:</div>`,
-    _ => proxyEx[type],
-    _ => proxyEx[is](Proxy),
-    _ => proxyEx[is](String),
+    _ => test(_ => proxyEx[type], `Proxy (String)`),
+    _ => test(_ => proxyEx[is](Proxy), true),
+    _ => test(_ => proxyEx[is](String), true),
 
     t => `<div class="normal" id="nulletc" data-content-text="null, undefined, true, false">
             <b>null, undefined, true, false</b>
             <br><b>Note</b>: <code>null</code> and <code>undefined</code>
             must always be wrapped. </div>`,
-    _ => maybe({trial: () => nil[type], whenError: () => `WRAPPED ${$Wrap(nil).type}`}),
-    _ => maybe({trial: () => undef[type], whenError: () => `WRAPPED ${$Wrap(undef).type}`}),
-    _ => nil?.[type] ?? $Wrap(nil)[type],
-    _ => $Wrap(nil)[is](undefined),
-    _ => $Wrap(nil)[is](null),
-    _ => tru[type],
-    _ => flse[type],
-    _ => $Wrap(flse)[type],
-    _ => $Wrap(tru)[type],
-    _ => tru[is](Boolean),
-    _ => flse[is](Boolean),
-    _ => undef?.[type] ?? $Wrap(undefined)[type],
-    _ => undef?.[is](undefined) ?? $Wrap(undef)[is](undefined),
-    _ => undef?.[is](null, NaN) ?? $Wrap(undef)[is](null, NaN),
+    _ => test(_ => IS(...[,null]), false),
+    _ => test(_ => IS(...[,]), `undefined`),
+    _ => test(_ => nil?.[type] ?? $Wrap(nil)[type], `null`),
+    _ => test(_ => $Wrap(nil)[is](undefined), false),
+    _ => test(_ => $Wrap(nil)[is](null), true),
+    _ => test(_ => tru[type], `Boolean`),
+    _ => test(_ => flse[type], `Boolean`),
+    _ => test(_ => $Wrap(flse)[type], `Boolean`),
+    _ => test(_ => $Wrap(tru)[type], `Boolean`),
+    _ => test(_ => tru[is](Boolean), true),
+    _ => test(_ => flse[is](Boolean), true),
+    _ => test(_ => undef?.[type] ?? $Wrap(undefined)[type], `undefined`),
+    _ => test(_ => undef?.[is](undefined) ?? $Wrap(undef)[is](undefined), true),
+    _ => test(_ => undef?.[is](null, NaN) ?? $Wrap(undef)[is](null, NaN), false),
+    _ => test(_ => maybe({trial: () => nil[type], whenError: () => `WRAPPED ${$Wrap(nil).type}`}), `WRAPPED null`),
+    _ => test(_ => maybe({trial: () => undef[type], whenError: () => `WRAPPED ${$Wrap(undef).type}`}), `WRAPPED undefined`),
 
     t => `<div class="normal" id="nothing" data-content-text="'Nothingness'</b> (<code>isNothing</code>)"><b>'Nothingness'</b> (<code>isNothing</code>)<br>
           <code>isNothing</code> is a special
@@ -211,38 +258,42 @@ function codeExamples() {
           either <code>null</code>, <code>undefined</code>,
           <code>NaN</code> or <code>Infinity</code>
           </div>`,
-    _ => isNothing(undef),
-    _ => isNothing(nil),
-    _ => isNothing(nil, true),
-    _ => isNothing(undef, true),
-    _ => isNothing(NaN),
-    _ => isNothing(NaN, true),
-    _ => isNothing(1/0),
-    _ => isNothing(1/0, true),
-    _ => isNothing("hello!", true),
-    _ => isNothing(new Date(`error!`).getTime()),
-    _ => isNothing(new Date(`error!`).getTime(), true),
-    _ => isNothing(new Date()),
-    _ => isNothing(new Date(), true),
+    _ => test(_ => isNothing(undef), true),
+    _ => test(_ => isNothing(nil), true),
+    _ => test(_ => isNothing(nil, true), true),
+    _ => test(_ => isNothing(undef, true), true),
+    _ => test(_ => isNothing(NaN), false),
+    _ => test(_ => isNothing(NaN, true), true),
+    _ => test(_ => isNothing(1/0), false),
+    _ => test(_ => isNothing(1/0, true), true),
+    _ => test(_ => isNothing("hello!", true), false),
+    _ => test(_ => isNothing(new Date(`error!`).getTime()), false),
+    _ => test(_ => isNothing(new Date(`error!`).getTime(), true), true),
+
+    t => `<div class="normal"><b>Note</b>: Invalid Date is still a <code>Date</code></div>`,
+    _ => test(_ => new Date(`error!`)[is](Date), true),
+    _ => test(_ => new Date(`error!`)[type], `Date`),
+    _ => test(_ => isNothing(new Date(`error!`) /*Invalid Date: still a Date*/), false),
+    _ => test(_ => isNothing(new Date(`error!`), true), false),
 
     t => `<div class="normal" id="zero" data-content-text="0 (zero)"><b>0 (zero)</b></div>`,
-    _ => zero[type],
-    _ => zero[is](Boolean /* should be false */),
-    _ => zero[is](Number /* literal is Number */),
-    _ => zero[is](Object /* literal not Object */),
-    _ => new Number(zero)[is](Number),
-    _ => new Number(zero)[is](Object /*<br>&nbsp;&nbsp;Up the prototype chain, Number instance is also Object */),
+    _ => test(_ => zero[type], `Number`),
+    _ => test(_ => zero[is](Boolean /* should be false */), false),
+    _ => test(_ => zero[is](Number /* literal is Number */), true),
+    _ => test(_ => zero[is](Object /* literal not Object */), false),
+    _ => test(_ => new Number(zero)[is](Number), true),
+    _ => test(_ => new Number(zero)[is](Object /* Up the prototype chain */), true),
 
     t => `<div class="normal" id="nan" data-content-text="NaN"><b>NaN</b></div>`,
-    _ => typeof not_a_nr,
-    _ => not_a_nr[is](Number /* by design we DON'T consider NaN to be Number */),
-    _ => not_a_nr[type],
-    _ => not_a_nr[is](NaN),
-    _ => new Number(not_a_nr)[is](Number),
-    _ => new Number(not_a_nr)[is](Object),
-    _ => typeof new Number(not_a_nr),
-    _ => new Number(not_a_nr)[type],
-    _ => new Number(not_a_nr)[is](NaN),
+    _ => test(_ => /* ES20xx default */ typeof not_a_nr, `number`),
+    _ => test(_ => not_a_nr[is](Number /* by design we DON'T consider NaN to be Number */), false),
+    _ => test(_ => not_a_nr[type], `NaN`),
+    _ => test(_ => not_a_nr[is](NaN), true),
+    _ => test(_ => new Number(not_a_nr)[is](Number), false),
+    _ => test(_ => /* ES20xx */typeof new Number(not_a_nr), `object`),
+    _ => test(_ => new Number(not_a_nr)[is](Object), false),
+    _ => test(_ => new Number(not_a_nr)[type], `NaN`),
+    _ => test(_ => new Number(not_a_nr)[is](NaN), true),
 
     t => `<div class="normal" id="specials" data-content-text="Special cases"><b>Special cases</b>
             (<code>IS(input, {isTypes: [...types], notTypes: [...types]|defaultValue: any})</code>)
@@ -253,32 +304,40 @@ function codeExamples() {
               <li>with key <code>notTypes</code>: is the input type (one of) [<code>isTypes</code>],
                 but <i><b>not</b></i> (one of) [<code>notTypes</code>]?</li>
               <li>with key <code>defaultValue</code>: if input type is not (one of) [<code>isTypes</code>],
-                then returns [<code>defaultValue</code>], otherwise the input value</li>
+                returns [<code>defaultValue</code>], otherwise <code>true</code></li>
+              <li><b>Note</b> With <i>only</i> key <code>isTypes</code> <code>{notTypes: [undefined]}</code>
+                is assumed.</li>
             </ul>
           </div>`,
-    _ => div[is]({isTypes: HTMLDivElement, notTypes: HTMLUnknownElement}),
-    _ => div[is]({isTypes: [Array, String], notTypes: Node}),
-    _ => div[is]({isTypes: [HTMLElement], notTypes: [Array, String]}),
-    _ => `Hello`[is]({isTypes: [Object, Array], notTypes: String}),
-    _ => `Hello`[is]({isTypes: Array, defaultValue: `Should be an Array!`}),
-    _ => div[is]({isTypes: [Node], notTypes: [undefined, null, NaN]}),
-    _ => $Wrap(null)[is]({isTypes: null, notTypes: [undefined] /*undefined *must* be array*/}),
-    _ => IS(div, {isTypes: HTMLDivElement, notTypes: HTMLUnknownElement}),
-    _ => IS(div, {isTypes: HTMLUListElement, defaultValue: printHTML(div.outerHTML)}),
-    _ => IS(div, {isTypes: [undefined, null, NaN], defaultValue: printHTML(div.outerHTML)}),
+    _ => test(_ => div[is]({isTypes: HTMLDivElement, notTypes: HTMLUnknownElement}), true),
+    _ => test(_ => div[is]({isTypes: [Array, String], notTypes: Node}), false),
+    _ => test(_ => div[is]({isTypes: [HTMLElement], notTypes: [Array, String]}), true),
+    _ => test(_ => `Hello`[is]({isTypes: [Object, Array], notTypes: String}), false),
+    _ => test(_ => `Hello`[is]({isTypes: Array, defaultValue: `Should be an Array!`}), `Should be an Array!`),
+    _ => test(_ => div[is](Node), true),
+    _ => test(_ => IS(div, {isTypes: [Node], notTypes: NaN}), true),
+    _ => test(_ => IS(div, {isTypes: [Node], notTypes: [RegExp, Symbol]}), true),
+    _ => test(_ => IS(div, {isTypes: [Node], notTypes: [Number, undefined]}), true),
+    _ => test(_ => IS(div, {isTypes: [Node], notTypes: undefined}), true),
+    _ => test(_ => IS(div, {isTypes: [Node]}), true),
+    _ => test(_ => $Wrap(null)[is]({isTypes: [null], notTypes: [undefined]}), true),
+    _ => test(_ => $Wrap(NaN).is({isTypes: [NaN], notTypes: [undefined, null]}), true),
+    _ => test(_ => IS(div, {isTypes: HTMLDivElement, notTypes: HTMLUnknownElement}), true),
+    _ => test(_ => IS(div, {isTypes: HTMLUListElement, defaultValue: printHTML(div.outerHTML)}), `&lt;div>I am div&lt;/div>`),
+    _ => test(_ => IS(div, {isTypes: [undefined, null, NaN], defaultValue: printHTML(div.outerHTML)}), `&lt;div>I am div&lt;/div>`),
 
     t => xProxy.custom(),
     t => `<div class="normal"><b>*</b> Rewritten <code>Proxy</code> constructor (<code>xProxy.custom()</code>)</div>`,
-    _ => new Proxy(new Date(), {})[type],
-    _ => new Proxy(new Date(), {})[is]({isTypes: Proxy, notTypes: Date}),
-    _ => new Proxy(new Date(), {})[is]({isTypes: Date, notTypes: Proxy}),
+    _ => test(_ => new Proxy(new Date(), {})[type], `Proxy (Date)`),
+    _ => test(_ => new Proxy(new Date(), {})[is]({isTypes: Proxy, notTypes: Date}), false),
+    _ => test(_ => new Proxy(new Date(), {})[is]({isTypes: Date, notTypes: Proxy}), false),
 
     t => xProxy.native(),
     t => `<div class="normal"><b>*</b> Native <code>Proxy</code> constructor (<code>xProxy.native()</code>)</div>`,
-    _ => new Proxy(new Date(), {})[type],
-    _ => new Proxy(new Date(), {})[is]({isTypes: Proxy, notTypes: Date}),
-    _ => new Proxy(new Date(), {})[is]({isTypes: Date, notTypes: Proxy}),
-    
+    _ => test(_ => new Proxy(new Date(), {})[type], `Date`),
+    _ => test(_ => new Proxy(new Date(), {})[is]({isTypes: Proxy, notTypes: Date}), false),
+    _ => test(_ => new Proxy(new Date(), {})[is]({isTypes: Date, notTypes: Proxy}), true),
+
     t => `<div class="normal" id="tostringtag" data-content-text="The use of <code>Symbol.toStringTag</code>">
             <b>toStringTag</b>:
               The use of <code>Symbol.toStringTag</code> for reporting/checking 'types'.
@@ -294,68 +353,67 @@ function codeExamples() {
                 href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/toStringTag"
                 >MDN documentation</a></div>
             </div>`,
-    _ => div[type],
-    _ => Symbol.for(`is`)[type],
-    _ => Symbol.is[Symbol.is](Symbol /* known global constructor */),
-    _ => new Intl.Collator()[type],
-    _ => new Intl.Collator()[is](`Intl.Collator`),
-    _ => new Intl.Collator()[is](Object),
-    _ => new Float32Array(1)[type],
-    _ => new Float32Array(1)[is](TypedArray /* not a known global constructor */),
-    _ => new Float32Array(1)[is](Object),
-    _ => new Float32Array(1)[is](Array, "Float32Array"),
-    _ => new Error(`error!`)[type],
-    _ => new DataView(new ArrayBuffer(2))[type],
-    _ => function* () { yield 'a'; yield 'b'; yield 'c'; }[type],
-    _ => new FinalizationRegistry(_ => {})[type],
-    _ => new FinalizationRegistry(_ => {})[is]("FinalizationRegistry"),
-    _ => new FinalizationRegistry(_ => {})[is](Function, "FinalizationRegistry"),
-    _ => new FinalizationRegistry(_ => {})[is](Function),
-    _ => new FinalizationRegistry(_ => {})[is](Object),
-    _ => Iterator[type],
-    _ => Iterator.from([1,2,3])[type],
-    _ => Iterator.from([1,2,3])[is](`Array Iterator`),
-    _ => Iterator.from([1,2,3])[is](Object),
-    _ => new AggregateError(`aggregateError!`)[type],
-    _ => new SharedArrayBuffer(16)?.[type],
-    _ => Intl[type],
-    _ => Intl[is](Object),
-    _ => Intl[is](`Intl`),
-    _ => Intl.Collator[type],
-    _ => Intl.Collator[is](Function),
-    _ => JSON[type],
-    _ => JSON[is](Object),
-    _ => Math[type],
-    _ => new Promise((a, b) => {})[type],
-    _ => new Promise((a, b) => {})[is](Promise),
-    _ => function* () {}[type],
-    _ => function* () {}[is](Function),
-    _ => function* () {}[is](`GeneratorFunction`),
-    
+    _ => test(_ => div[type], `[object HTMLDivElement]`),
+    _ => test(_ => Symbol.for(`is`)[type], `[object Symbol]`),
+    _ => test(_ => Symbol.is[Symbol.is](Symbol /* known global constructor */), true),
+    _ => test(_ => new Intl.Collator()[type], `[object Intl.Collator]`),
+    _ => test(_ => new Intl.Collator()[is](`Intl.Collator`), true),
+    _ => test(_ => new Intl.Collator()[is](Object), true),
+    _ => test(_ => new Float32Array(1)[type], `[object Float32Array]`),
+    _ => test(_ => new Float32Array(1)[is](TypedArray /* not a known global constructor */), false),
+    _ => test(_ => new Float32Array(1)[is](Array, "Float32Array"), true),
+    _ => test(_ => new Float32Array(1)[is](Object), true),
+    _ => test(_ => new DataView(new ArrayBuffer(2))[type], `[object DataView]`),
+    _ => test(_ => new FinalizationRegistry(_ => {})[type], `[object FinalizationRegistry]`),
+    _ => test(_ => new FinalizationRegistry(_ => {})[is]("FinalizationRegistry"), true),
+    _ => test(_ => new FinalizationRegistry(_ => {})[is](Function, "FinalizationRegistry"), true),
+    _ => test(_ => new FinalizationRegistry(_ => {})[is](Function), false),
+    _ => test(_ => new FinalizationRegistry(_ => {})[is](Object), true),
+    _ => test(_ => Iterator[type], `Function`),
+    _ => test(_ => Iterator.from([1,2,3])[type], `[object Array Iterator]`),
+    _ => test(_ => Iterator.from([1,2,3])[is](`Array Iterator`), true),
+    _ => test(_ => Iterator.from([1,2,3])[is](Object), true),
+    _ => test(_ => new SharedArrayBuffer(16)?.[type], `[object SharedArrayBuffer]`),
+    _ => test(_ => Intl[type], `[object Intl]`),
+    _ => test(_ => Intl[is](Object), true),
+    _ => test(_ => Intl[is](`Intl`), true),
+    _ => test(_ => Intl.Collator[type], `Function`),
+    _ => test(_ => Intl.Collator[is](Function), true),
+    _ => test(_ => new Intl.Collator(`nl`)[type], `[object Intl.Collator]`),
+    _ => test(_ => new Intl.Collator(`nl`)[is](Object), true),
+    _ => test(_ => JSON[type], `[object JSON]`),
+    _ => test(_ => JSON[is](Object), true),
+    _ => test(_ => Math[type], `[object Math]`),
+    _ => test(_ => new Promise((a, b) => {})[type], `[object Promise]`),
+    _ => test(_ => new Promise((a, b) => {})[is](Promise), true),
+    _ => test(_ => function* () {}[type], `[object GeneratorFunction]`),
+    _ => test(_ => function* () {}[is](Function), true),
+    _ => test(_ => function* () {}[is](`GeneratorFunction`), true),
+
     t => `<div class="normal" id="more" data-content-text="More examples"><b>More examples</b></div>`,
-    _ => /[a-z]/[type],
-    _ => /[a-z]/[is](RegExp),
-    _ => /[a-z]/[is](Array),
-    _ => ``[type],
-    _ => new SomeCTOR("yada")[type],
-    _ => new SomeCTOR("yada")[is](SomeCTOR),
-    _ => new SomeCTOR("yada")[is](Object /* up the prototype chain */),
-    _ => Symbol(`me`)[is](Symbol),
-    _ => div[is](Node),
-    _ => div[is](HTMLElement),
-    _ => div[is](HTMLDivElement),
-    _ => div[is](HTMLUListElement),
-    _ => div[is](HTMLUListElement, HTMLAreaElement, Node),
-  ]
+    _ => test(_ => /[a-z]/[type], `RegExp`),
+    _ => test(_ => /[a-z]/[is](RegExp), true),
+    _ => test(_ => /[a-z]/[is](Array), false),
+    _ => test(_ => ``[type], `String`),
+    _ => test(_ => new AggregateError(`aggregateError!`)[type], `AggregateError`),
+    _ => test(_ => new AggregateError(`aggregateError!`)[is](Error), true),
+    _ => test(_ => new TypeError(`error1`)[type], `TypeError`),
+    _ => test(_ => new TypeError(`error2`)[is](TypeError), true),
+    _ => test(_ => new TypeError(`error3`)[is](Error /* up the prototype chain */), true),
+    _ => test(_ => new SomeCTOR("yada")[type], `SomeCTOR`),
+    _ => test(_ => new SomeCTOR("yada")[is](SomeCTOR), true),
+    _ => test(_ => new SomeCTOR("yada")[is](Object /* up the prototype chain */), true),
+    _ => test(_ => Symbol(`me`)[is](Symbol), true),
+    _ => test(_ => div[is](Node), true),
+    _ => test(_ => div[is](HTMLElement), true),
+    _ => test(_ => div[is](HTMLDivElement), true),
+    _ => test(_ => div[is](HTMLUListElement), false),
+    _ => test(_ => div[is](HTMLUListElement, HTMLAreaElement, Node), true),
+  ];
 }
 
 function toCode(str, res) {
-  const resX = $Wrap(res);
-  return `<code>${str}</code>: ${resX[is](Object, Array)
-    ? `<pre>${JSON.stringify(res, null, 2)}</pre>`
-    : resX[is](Symbol)
-      ? res.toString()
-      : res}`;
+  return `<code>${str}</code>`;
 }
 
 function addContentIndex() {
@@ -372,34 +430,60 @@ function addContentIndex() {
   normalDiv.append(ul);
   document.querySelector(`#log2screen li:first-child .normal`)
     .insertAdjacentElement(`afterend`, normalDiv);
-  
 }
 
 function logExampleCB(example) {
   const fn = example.toString().trim();
-  const whenError = err => {
-    log(`Tried: <code>${fn.slice(fn.indexOf(`>`)+1)}</code>,
-      <br>Failed with ${err.name}: "${err.message}".`);
-    return console.error(err);
-  };
-  const result = maybe({trial: example, whenError});
+  const result = maybe({trial: example, whenError: err => testError(err, fn)});
+  
+  if (result === `FAIL`) { return failed += 1; }
+  
   if (!isNothing(result)) {
-    return fn.startsWith('t')
-      ? result && log(`!!${example()}`)
-      : log(toCode(String(fn).slice(4), example()))
+    return log(toCode(String(fn).slice(4), example()))
   }
 }
 
 function printExamples() {
   document.addEventListener(`click`, handle);
-  codeExamples().forEach(logExampleCB);
+  const allTests = codeExamples();
+  
+  for (let i = 0; i < allTests.length; i += 1) {
+    const ex = allTests[i];
+    if (ex.toString().startsWith(`t`)) {
+      const txt2Log = ex();
+      txt2Log &&  log(`!!${ex()}`);
+      continue;
+    }
+    
+    logExampleCB(ex);
+  }
+  
   addContentIndex();
+  popupResults();
+}
+
+function popupResults() {
+  resultBox.textContent = ``;
+  resultBox.insertAdjacentHTML(`beforeend`,
+    `<ul>
+      <li>tests run: <b>${nTests}</b></li>
+      <li>tests succeeded: <span class="ok" data-expected="..."><b>${succeeded}</b></span></li>
+      <li>tests failed: <span class="testErr" data-expected="..."><b>${failed}</b></span></li>
+    </ul>
+    <div><button id="closePopover">Close</button></div>`);
+  resultBox.showPopover();
 }
 
 function handle(evt) {
+  const isPopover = evt.target.closest(`#testResults`);
+  if (isPopover) {
+    return isPopover.hidePopover();
+  }
+  
   if (evt.target.closest(`[data-content-text]`)) {
-    return document.querySelector(`#log2screen li:first-child`).scrollIntoView();
-  }}
+    return document.querySelector(`.container`).scrollIntoView();
+  }
+}
 
 function logFactory(formatJSON = true) {
   const logContainer = document.querySelector(`#log2screen`);
@@ -424,6 +508,22 @@ function logFactory(formatJSON = true) {
     log: (...txt) => txt.forEach( logLamda ),
     logTop: (...txt) => txt.forEach( logTopLambda ),
   };
+}
+
+function testError(err, testFn) {
+  log(`<div class="testErr" data-expected="Function problem caught">
+      Tried: <code>${testFn.slice(testFn.indexOf(`>`)+1)}</code>
+      <br><b>=> NOT OK</b> (execution problem:
+      failed with <i>${err.name}</i>: "<i>${err.message}</i>").</div>`);
+  return `FAIL`;
+}
+
+function createResultBox() {
+  const resultBox = Object.assign(document.createElement(`div`), {
+    popover: `manual`,
+    id: `testResults` });
+  document.querySelector(`.container`) .prepend(resultBox);
+  return resultBox;
 }
 
 function tryJSON(content, formatted) {

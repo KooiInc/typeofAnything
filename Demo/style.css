@@ -43,6 +43,41 @@ body {
     inset: 0;
     position: absolute;
 
+    & [popover] {
+      box-shadow: 2px 2px 8px #999;
+      padding: 2rem;
+      border-color: white;
+      border-radius: 50%;
+      font-size: larger;
+
+      div {
+        text-align: center;
+        margin-top: 1rem;
+      }
+
+      ul {
+        margin: 1rem 0 0 -1rem;
+        li {
+          margin-top: 0.1rem;
+          font: revert;
+          padding: 0 5px;
+          list-style: "✓";
+
+          &:last-child {
+            padding-bottom: revert;
+          }
+        }
+      }
+    }
+
+    .ok b, .ok i {
+      color: green;
+    }
+
+    .testErr b, .testErr i {
+      color: red;
+    }
+
     code:not(.language-javascript) {
       background-color: rgb(227, 230, 232);
       color: rgb(12, 13, 14);
