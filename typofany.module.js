@@ -104,9 +104,12 @@ function TOAFactory() {
     }
   }
   
-  function isOrDefault(input, { defaultValue, isTypes = [undefined] } = {}) {
+  function isOrDefault(input, { defaultValue, isTypes = [undefined], notTypes } = {}) {
     isTypes = isTypes?.constructor !==  Array ? [isTypes] : isTypes;
-    return IS(input, ...isTypes) ? input : defaultValue;
+    notTypes = notTypes && notTypes?.constructor !== Array ? [notTypes] : [];
+    return notTypes.length < 1
+      ? IS(input, ...isTypes) ? input : defaultValue
+      : isExcept(input, {isTypes, notTypes}) ? input : defaultValue;
   }
   
   function isExcept(input, { isTypes = [undefined], notTypes = [undefined] } = {} ) {
