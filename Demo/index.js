@@ -34,14 +34,15 @@ function getHeader() {
     <div class="normal"><h3>TypeofAnything: determine/check the type of nearly any (ECMAScript) thing</h3>
       (including null/undefined/NaN/true/false etc.).
       <br><b>Note</b> Every example is a <i>test</i> for the given code. The 'received' value is the
-      result of the code.
+      result of the executed code.
+      <br><button id="showResults">Show test results</button>
     </div>
     <div class="normal noborder"><h3>Code used for examples</h3></div>
     <code class="block">
     // import & initialize
     import { 
       default as IS, // the main type checking function
-      maybe,         // a try/catch wrapper function
+      maybe,         // a try/catch wrapper utility function
       $Wrap,         // wrapper for any variable
       isNothing,     // special function for empty stuff (null, NaN etc)
       xProxy,        /* Object for Proxy implementation. Syntax:
@@ -305,8 +306,8 @@ function codeExamples() {
                 but <i><b>not</b></i> (one of) [<code>notTypes</code>]?</li>
               <li>with key <code>defaultValue</code>: if input type is not (one of) [<code>isTypes</code>],
                 returns [<code>defaultValue</code>], otherwise <code>true</code></li>
-              <li><b>Note</b> With <i>only</i> key <code>isTypes</code> <code>{notTypes: [undefined]}</code>
-                is assumed.</li>
+              <li><b>Note</b> With <i>only</i> key <code>isTypes</code> the code will run as
+                <code>IS(input, ...[value of isTypes])</code>.</li>
             </ul>
           </div>`,
     _ => test(_ => div[is]({isTypes: HTMLDivElement, notTypes: HTMLUnknownElement}), true),
@@ -475,9 +476,15 @@ function popupResults() {
 }
 
 function handle(evt) {
-  const isPopover = evt.target.closest(`#testResults`);
-  if (isPopover) {
-    return isPopover.hidePopover();
+  const popoverCloseBttn = evt.target.closest(`#testResults`);
+  const popoverOpenBttn = evt.target.closest(`#showResults`);
+  
+  if (popoverOpenBttn) {
+    return resultBox.showPopover();
+  }
+  
+  if (popoverCloseBttn) {
+    return popoverCloseBttn.hidePopover();
   }
   
   if (evt.target.closest(`[data-content-text]`)) {
