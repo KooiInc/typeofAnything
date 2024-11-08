@@ -55,9 +55,12 @@ function getHeader() {
     const type = Symbol.type;
 
     // definitions used in the following examples
-    const [tru, flse, zero, not_a_nr, nil, undef, div, proxyEx] =
+    const [tru, flse, zero, not_a_nr, nil, undef, div, div2, nonDiv, proxyEx] =
       [true, false, 0, +("NaN"), null, undefined, 
-       document.createElement("div"), someProxy()];
+       Object.assign(document.createElement("div"), {textContent: "I am div"}),
+       Object.assign(document.createElement("div"), {textContent: "I am div 2"}),
+       document.createElement("unknown"),
+       someProxy()];
     
     // a constructor
     function SomeCTOR(something) {
@@ -78,8 +81,15 @@ function test(testFn, expected) {
   let result = maybe({trial: testFn, whenError: err => testError(err, fnStr)});
   if (result === `FAIL`) { failed += 1; return; }
   
-  expected = IS(expected, String) ? `"${expected}"` : expected;
-  result = IS(result, String) ? `"${result}"` : result;
+  expected = IS(expected, HTMLElement)
+    ? printHTML(expected.outerHTML) : IS(expected, Object)
+      ? maybe({trial: _ => JSON.stringify(expected)}) : IS(expected, String)
+        ? `"${expected}"` : expected;
+  
+  result = IS(result, HTMLElement)
+    ? printHTML(result.outerHTML) : IS(result, Object)
+      ? maybe({trial: _ => JSON.stringify(result)}) : IS(result, String)
+        ? `"${result}"` : result;
   const resultStr = `(expected <i>${expected}</i>, received <i>${result}</i>)`;
   
   if (result ===  expected) {
@@ -93,9 +103,12 @@ function test(testFn, expected) {
 }
 
 function codeExamples() {
-  const [tru, flse, zero, not_a_nr, nil, undef, div, proxyEx] =
-    [true, false, 0, +("NaN"), null, undefined, document.createElement(`div`), someProxy()];
-  div.textContent = `I am div`;
+  const [tru, flse, zero, not_a_nr, nil, undef, div, div2, nonDiv, proxyEx] =
+    [true, false, 0, +("NaN"), null, undefined,
+      Object.assign(document.createElement("div"), {textContent: "I am div"}),
+      Object.assign(document.createElement("div"), {textContent: "I am div 2"}),
+      document.createElement("unknown"),
+      someProxy()];
   
   function SomeCTOR(something) {
     this.something = something;
@@ -296,16 +309,20 @@ function codeExamples() {
     _ => test(_ => new Number(not_a_nr)[type], `NaN`),
     _ => test(_ => new Number(not_a_nr)[is](NaN), true),
 
-    t => `<div class="normal" id="specials" data-content-text="Special cases"><b>Special cases</b>
-            (<code>IS(input, {isTypes: [...types], notTypes: [...types]|defaultValue: any})</code>)
+    t => `<div class="normal" id="specials" data-content-text="Special signature for <code>IS</code>">
+            <b>Special signature for <code>IS/Symbol.is</code></b>
+            <div><code>IS(input, {isTypes: [...types][, notTypes: [...types], defaultValue: any]})</code></div>
             <div>When the second parameter (or the first, using the Object symbol extension or <code>$Wrap</code>)
               is an Object with key [<code>isTypes</code>] and one of the keys [<code>defaultValue</code>]
               or [<code>notTypes</code>], the <code>IS</code> function works like:
             <ul>
               <li>with key <code>notTypes</code>: is the input type (one of) [<code>isTypes</code>],
                 but <i><b>not</b></i> (one of) [<code>notTypes</code>]?</li>
-              <li>with key <code>defaultValue</code>: if input type is not (one of) [<code>isTypes</code>],
+              <li>with key <code>defaultValue</code>: if input type is not (one of) [<code>isTypes</code>]:
                 returns [<code>defaultValue</code>], otherwise the <code>input</code> value</li>
+              <li>with keys <code>defaultValue</code> <i>and</i> <code>notTypes</code>:
+                if input type is (one of) [<code>isTypes</code>] and not (one of) [<code>notTypes</code>]
+                returns [<code>input</code>], otherwise the <code>defaultValue</code> value</li>
               <li>
                 <b>Notes</b>
                 <ul class="notes">
@@ -339,10 +356,15 @@ function codeExamples() {
     _ => test(_ => IS(undefined, {isTypes: null, defaultValue: 42}), 42),
     _ => test(_ => IS(`50`, {isTypes: `42`, defaultValue: 42}), 42),
     _ => test(_ => IS(50, {isTypes: `50`, defaultValue: 42}), 42),
+    _ => test(_ => IS({a: 50}, {isTypes: Object, notTypes: Array, defaultValue: 42}), {a: 50}),
+    _ => test(_ => IS([1,2,42], {isTypes: Array, notTypes: Object, defaultValue: [42]}), [42]),
     _ => test(_ => IS(undefined, {isTypes: undefined, defaultValue: 42}), undefined),
     _ => test(_ => IS(div, {isTypes: HTMLUListElement, defaultValue: undefined}), undefined),
-    _ => test(_ => IS(div, {isTypes: [undefined, null, NaN], defaultValue: printHTML(div.outerHTML)}), `&lt;div>I am div&lt;/div>`),
-
+    _ => test(_ => IS(div, {isTypes: HTMLElement, notTypes: HTMLUnknownElement, defaultValue: div2}), div),
+    _ => test(_ => IS(nonDiv, {isTypes: HTMLElement, notTypes: HTMLUnknownElement, defaultValue: div}), div),
+    _ => test(_ => IS(div, {isTypes: HTMLUListElement, defaultValue: div2}), div2),
+    _ => test(_ => IS(div, {isTypes: [undefined, null, NaN], defaultValue: div2}), div2),
+    
     t => xProxy.custom(),
     t => `<div class="normal"><b>*</b> Rewritten <code>Proxy</code> constructor (<code>xProxy.custom()</code>)</div>`,
     _ => test(_ => new Proxy(new Date(), {})[type], `Proxy (Date)`),
@@ -421,6 +443,8 @@ function codeExamples() {
     _ => test(_ => new SomeCTOR("yada")[is](SomeCTOR), true),
     _ => test(_ => new SomeCTOR("yada")[is](Object /* up the prototype chain */), true),
     _ => test(_ => Symbol(`me`)[is](Symbol), true),
+    _ => test(_ => nonDiv[type], `[object HTMLUnknownElement]`),
+    _ => test(_ => nonDiv[is](HTMLUnknownElement), true),
     _ => test(_ => div[is](Node), true),
     _ => test(_ => div[is](HTMLElement), true),
     _ => test(_ => div[is](HTMLDivElement), true),
