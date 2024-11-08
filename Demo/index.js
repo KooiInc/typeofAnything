@@ -305,9 +305,20 @@ function codeExamples() {
               <li>with key <code>notTypes</code>: is the input type (one of) [<code>isTypes</code>],
                 but <i><b>not</b></i> (one of) [<code>notTypes</code>]?</li>
               <li>with key <code>defaultValue</code>: if input type is not (one of) [<code>isTypes</code>],
-                returns [<code>defaultValue</code>], otherwise <code>true</code></li>
-              <li><b>Note</b> With <i>only</i> key <code>isTypes</code> the code will run as
+                returns [<code>defaultValue</code>], otherwise the <code>input</code> value</li>
+              <li>
+                <b>Notes</b>
+                <ul class="notes">
+                <li>With <i>only</i> the key <code>isTypes</code> in the first parameter
+                the code will run as:<br>
                 <code>IS(input, ...[value of isTypes])</code>.</li>
+                <li><code>IS(input, {isTypes: [type[s]], notTypes: [type[s]]})</code>
+                  is equivalent to
+                  <br><code>IS(input, [...isType(s)]) && !IS(input, [...notType(s)])</code> and
+                  <br><code>IS(input, {isTypes: [type[s]], defaultValue: [any]})</code>
+                  <br>equals to
+                  <br><code>IS(input, [...isType(s)]) || defaultValue</code></li></ul>
+              </li>
             </ul>
           </div>`,
     _ => test(_ => div[is]({isTypes: HTMLDivElement, notTypes: HTMLUnknownElement}), true),
@@ -321,10 +332,15 @@ function codeExamples() {
     _ => test(_ => IS(div, {isTypes: [Node], notTypes: [Number, undefined]}), true),
     _ => test(_ => IS(div, {isTypes: [Node], notTypes: undefined}), true),
     _ => test(_ => IS(div, {isTypes: [Node]}), true),
-    _ => test(_ => $Wrap(null)[is]({isTypes: [null], notTypes: [undefined]}), true),
-    _ => test(_ => $Wrap(NaN).is({isTypes: [NaN], notTypes: [undefined, null]}), true),
+    _ => test(_ => $Wrap(null)[is]({isTypes: null, notTypes: undefined}), true),
+    _ => test(_ => $Wrap(NaN).is({isTypes: NaN, notTypes: [undefined, null]}), true),
     _ => test(_ => IS(div, {isTypes: HTMLDivElement, notTypes: HTMLUnknownElement}), true),
-    _ => test(_ => IS(div, {isTypes: HTMLUListElement, defaultValue: printHTML(div.outerHTML)}), `&lt;div>I am div&lt;/div>`),
+    _ => test(_ => IS(`42`, {isTypes: String, defaultValue: {default: 42}}), `42`),
+    _ => test(_ => IS(undefined, {isTypes: null, defaultValue: 42}), 42),
+    _ => test(_ => IS(`50`, {isTypes: `42`, defaultValue: 42}), 42),
+    _ => test(_ => IS(50, {isTypes: `50`, defaultValue: 42}), 42),
+    _ => test(_ => IS(undefined, {isTypes: undefined, defaultValue: 42}), undefined),
+    _ => test(_ => IS(div, {isTypes: HTMLUListElement, defaultValue: undefined}), undefined),
     _ => test(_ => IS(div, {isTypes: [undefined, null, NaN], defaultValue: printHTML(div.outerHTML)}), `&lt;div>I am div&lt;/div>`),
 
     t => xProxy.custom(),
@@ -527,7 +543,7 @@ function testError(err, testFn) {
 
 function createResultBox() {
   const resultBox = Object.assign(document.createElement(`div`), {
-    popover: `manual`,
+    popover: `auto`,
     id: `testResults` });
   document.querySelector(`.container`) .prepend(resultBox);
   return resultBox;

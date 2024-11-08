@@ -115,6 +115,10 @@ body {
           }
         }
 
+        ul.notes li {
+          margin-left: -2rem;
+        }
+
         &:last-child {
           padding-bottom: 100rem;
         }
