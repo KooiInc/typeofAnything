@@ -20,14 +20,11 @@ function TOAFactory() {
   return { IS, maybe, $Wrap, isNothing, xProxy };
   
   function IS(anything, ...shouldBe) {
-    if (shouldBe.length && shouldBe[0]?.isTypes) {
+    if (maybe({trial: _ => `isTypes` in (shouldBe?.[0] ?? {})})) {
       const isTypeObj = shouldBe[0];
-      
       return `defaultValue` in (isTypeObj)
-        ? isOrDefault(anything, isTypeObj)
-        : `notTypes` in isTypeObj
-          ? isExcept(anything, isTypeObj)
-          : IS(anything, ...[isTypeObj.isTypes].flat());
+        ? isOrDefault(anything, isTypeObj) : `notTypes` in isTypeObj
+          ? isExcept(anything, isTypeObj) : IS(anything, ...[isTypeObj.isTypes].flat());
     }
     
     const input = typeof anything === `symbol` ? Symbol.any : anything;
@@ -115,12 +112,12 @@ function TOAFactory() {
   }
   
   function isOrDefault(input, { defaultValue, isTypes = [undefined] } = {}) {
-    isTypes = !Array.isArray(isTypes) ? [isTypes] : isTypes;
-    return IS(input, ...[isTypes]) || defaultValue;
+    isTypes = isTypes?.constructor !==  Array ? [isTypes] : isTypes;
+    return IS(input, ...isTypes) ? input : defaultValue;
   }
   
   function isExcept(input, { isTypes = [undefined], notTypes = [undefined] } = {} ) {
-    isTypes =  (isTypes?.constructor !== Array ? [isTypes] : isTypes);
+    isTypes =  isTypes?.constructor !== Array ? [isTypes] : isTypes;
     notTypes = notTypes?.constructor !== Array ? [notTypes] : notTypes;
     return IS(input, ...isTypes) && !IS(input, ...notTypes);
   }
