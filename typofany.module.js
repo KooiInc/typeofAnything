@@ -29,11 +29,11 @@ function TOAFactory() {
   }
   
   function determineType(input, ...shouldBe) {
-    let { noInput, noShouldbe, compareTo, inputCTOR, isNaN, isInfinity, sbIsNothing } = processInput(input, ...shouldBe);
+    let { noInput, noShouldbe, compareTo, inputCTOR, isNaN, isInfinity, sbFirstIsNothing } = processInput(input, ...shouldBe);
     shouldBe = shouldBe.length && shouldBe[0];
     
     switch(true) {
-      case sbIsNothing: return String(input) === String(compareTo);
+      case sbFirstIsNothing: return String(input) === String(compareTo);
       case input?.[Symbol.proxy] && noShouldbe: return input[Symbol.proxy];
       case isNaN:  return noShouldbe ? `NaN` : maybe({trial: _ => String(compareTo)}) === String(input);
       case isInfinity:  return noShouldbe ? `Infinity` : maybe({trial: _ => String(compareTo)}) === String(input);
@@ -50,12 +50,12 @@ function TOAFactory() {
   function processInput(input, ...shouldBe) {
     const noShouldbe = shouldBe.length < 1;
     const compareTo = !noShouldbe && shouldBe[0];
-    const sbIsNothing = !noShouldbe && isNothing(shouldBe[0]);
+    const sbFirstIsNothing = !noShouldbe && isNothing(shouldBe[0]);
     const noInput = input === undefined || input === null;
     const inputCTOR = !noInput && Object.getPrototypeOf(input)?.constructor;
     const isNaN = maybe({trial: _ => String(input)}) === `NaN`;
     const isInfinity = maybe({trial: _ => String(input)}) === `Infinity`;
-    return { noInput, noShouldbe, compareTo, inputCTOR, isNaN, isInfinity, sbIsNothing};
+    return { noInput, noShouldbe, compareTo, inputCTOR, isNaN, isInfinity, sbFirstIsNothing};
   }
   
   function getResult(input, compareWith, noShouldbe, me) {
