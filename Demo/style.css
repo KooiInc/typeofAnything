@@ -101,6 +101,11 @@ body {
         margin-left: -1.2rem;
         list-style: "✓";
 
+        .testResult {
+          margin: 0 0 0.4rem 1rem;
+
+        }
+
         ul {
           margin: 0;
           li {
