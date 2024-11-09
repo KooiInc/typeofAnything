@@ -473,7 +473,7 @@ function retrieveAllTests(variables) {
                     <br><code>IS(input, [...isType(s)]) && input || defaultValue</code></li>
                   <li><code>IS(input, {isTypes: [type(s)], notTypes: [type(s)]defaultValue: [any]})</code>
                     <br>is equivalent to
-                    <br><code>IS(input, [...isType(s)]) && !IS([...notType(s)]) && input || defaultValue</code></li>
+                    <br><code>IS(input, [...isType(s)]) && !IS(input, [...notType(s)]) && input || defaultValue</code></li>
                 </ul>
               </li>
             </ul>
