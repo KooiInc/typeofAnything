@@ -96,7 +96,7 @@ body {
         margin-top: 0.1rem;
         font: revert;
         font-size: 1.1em;
-        line-height: 1.4rem;
+        line-height: 1.5rem;
         padding: 0 5px;
         margin-left: -1.2rem;
         list-style: "✓";
@@ -122,6 +122,7 @@ body {
 
         ul.notes li {
           margin-left: -2rem;
+          line-height: 1.5rem;
         }
 
         &:last-child {
@@ -140,8 +141,8 @@ body {
           }
 
           .normal {
+            line-height: 1.5rem;
             font-weight: normal;
-            line-height: 1.4rem;
             margin: 12px 0 6px;
             color: rgb(69, 104, 161);
             padding: 0 0 0.2em 1.2rem;
