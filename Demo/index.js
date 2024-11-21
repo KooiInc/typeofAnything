@@ -34,7 +34,7 @@ function getHeader() {
     <div class="normal"><h3>TypeofAnything: determine/check the type of nearly any (ECMAScript) thing</h3>
       (including null/undefined/NaN/true/false etc.).
       <br><b>Note</b> Every example is a <i>test</i> for the given code. The 'received' value is the
-      result of the executed code.
+      result of the executed code. Two tests of all examples always fail by design.
       <br><button id="showResults">Show test counts</button>
     </div>
     <div class="normal noborder"><h3>Code used for examples</h3></div>
@@ -272,6 +272,7 @@ function retrieveAllTests(variables) {
     t => `<div class="normal" id="symbolicExt" data-content-text="The Object symbolic extension"><b>The Object symbolic extension</b></div>`,
     _ => test(_ => [][type], `Array`),
     _ => test(_ => [][is](Map), false),
+    _ => test(_ => [][is](Map, Set, RegExp), false),
     _ => test(_ => ({})[is](Array), false),
     _ => test(_ => [][is](Object /* up the prototoype chain */), true),
     _ => test(_ => `Hello World`[type], `String`),
@@ -363,9 +364,12 @@ function retrieveAllTests(variables) {
           to its initial constructor (using <code>xProxy.native()</code>),
           the results are:</div>`,
     _ => test(_ => new Proxy({}, {})[type], `Object`),
+    _ => test(_ => new Proxy({}, {})[is](Proxy), false),
     _ => test(_ => new Proxy(new String(), {})[type], `String`),
+    _ => test(_ => new Proxy(new String(), {})[is](Proxy), false),
     _ => test(_ => new Proxy(new Date(), {})[type], `Date`),
     _ => test(_ => new Proxy(new Date(), {})[is](Date), true),
+    _ => test(_ => new Proxy(new Date(), {})[is](Proxy), false),
     
     t => `<div class="normal">
           <b>Note</b>: <code>proxyEx</code> was assigned with the modified
