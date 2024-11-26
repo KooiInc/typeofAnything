@@ -154,7 +154,9 @@ function TOAFactory() {
         Proxy = new nativeProxy(nativeProxy, {
           construct(target, args) {
             const proxy = new target(...args);
-            proxy[Symbol.proxy] = `Proxy (${ctor2String(args[0])})`;
+            maybe( { trial: _ => {
+                proxy[Symbol.proxy] = `Proxy (${ctor2String(args[0])})`;
+                return true; } } );
             return proxy;
           }
         });
