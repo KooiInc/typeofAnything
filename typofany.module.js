@@ -29,17 +29,32 @@ function TOAFactory() {
   }
   
   function determineType(input, ...shouldBe) {
-    let { noInput, noShouldbe, compareTo, inputCTOR, isNaN, isInfinity, sbFirstIsNothing } = processInput(input, ...shouldBe);
+    let {
+      noInput,
+      noShouldbe,
+      compareTo,
+      inputCTOR,
+      isNaN,
+      isInfinity,
+      sbFirstIsNothing
+    } = processInput(input, ...shouldBe);
     shouldBe = shouldBe.length && shouldBe[0];
     
     switch (true) {
-      case sbFirstIsNothing: return String(input) === String(compareTo);
-      case input?.[Symbol.proxy] && noShouldbe: return input[Symbol.proxy];
-      case isNaN:  return noShouldbe ? `NaN` : maybe({trial: _ => String(compareTo)}) === String(input);
-      case isInfinity:  return noShouldbe ? `Infinity` : maybe({trial: _ => String(compareTo)}) === String(input);
-      case noInput: return noShouldbe ? String(input) : String(compareTo) === String(input);
-      case inputCTOR === Boolean: return !shouldBe ? `Boolean` : inputCTOR === shouldBe;
-      default: return getResult(input, shouldBe, noShouldbe, getMe(input, inputCTOR));
+      case sbFirstIsNothing:
+        return String(input) === String(compareTo);
+      case input?.[Symbol.proxy] && noShouldbe:
+        return input[Symbol.proxy];
+      case isNaN:
+        return noShouldbe ? `NaN` : maybe({trial: _ => String(compareTo)}) === String(input);
+      case isInfinity:
+        return noShouldbe ? `Infinity` : maybe({trial: _ => String(compareTo)}) === String(input);
+      case noInput:
+        return noShouldbe ? String(input) : String(compareTo) === String(input);
+      case inputCTOR === Boolean:
+        return !shouldBe ? `Boolean` : inputCTOR === shouldBe;
+      default:
+        return getResult(input, shouldBe, noShouldbe, getMe(input, inputCTOR));
     }
   }
   
@@ -60,16 +75,20 @@ function TOAFactory() {
   
   function getResult(input, compareWith, noShouldbe, me) {
     if (!noShouldbe && compareWith === input) { return true; }
-    if (input?.[Symbol.proxy] && compareWith === Proxy) { return compareWith === Proxy; }
-    if (maybe({trial: _ => String(compareWith)}) === `NaN`) { return String(input) === `NaN`; }
+    if (input?.[Symbol.proxy] && compareWith === Proxy) {
+      return true;
+    }
+    if (maybe({trial: _ => String(compareWith)}) === `NaN`) {
+      return String(input) === `NaN`;
+    }
     if (input?.[Symbol.toStringTag] && IS(compareWith, String)) {
       return String(compareWith) === input[Symbol.toStringTag];
     }
     
     return compareWith
       ? maybe({trial: _ => input instanceof compareWith,}) ||
-      compareWith === me || compareWith === Object.getPrototypeOf(me) ||
-      `${compareWith?.name}` === me?.name
+          compareWith === me || compareWith === Object.getPrototypeOf(me) ||
+          `${compareWith?.name}` === me?.name
       : input?.[Symbol.toStringTag] && `[object ${input?.[Symbol.toStringTag]}]` || me?.name || String(me);
     
   }
@@ -87,7 +106,11 @@ function TOAFactory() {
   function maybeFactory() {
     const tryFn = (maybeFn, maybeError) => maybeFn?.constructor === Function ? maybeFn(maybeError) : undefined;
     return function ({trial, whenError = () => undefined} = {}) {
-      try { return tryFn(trial) } catch(err) { return tryFn(whenError, err); }
+      try {
+        return tryFn(trial)
+      } catch (err) {
+        return tryFn(whenError, err)
+      }
     };
     
   }
@@ -122,7 +145,7 @@ function TOAFactory() {
     if (!Object.getOwnPropertyDescriptors(Object.prototype)[Symbol.is]) {
       Object.defineProperties(Object.prototype, {
         [Symbol.type]: { get() { return typeOf(this); }, },
-        [Symbol.is]: { value: function (...args) { return IS(this, ...args); }, },
+        [Symbol.is]: { value: function (...args) { return IS(this, ...args); } },
       });
       Object.defineProperties(Object, {
         [Symbol.type]: { value(obj) { return typeOf(obj); }, },

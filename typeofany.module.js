@@ -43,8 +43,8 @@ function TOAFactory() {
     switch (true) {
       case sbFirstIsNothing:
         return String(input) === String(compareTo);
-      case input?.[Symbol.proxy] || input?.constructor?.[Symbol.proxy] && noShouldbe:
-        return input?.constructor?.[Symbol.proxy] || input[Symbol.proxy];
+      case input?.[Symbol.proxy] && noShouldbe:
+        return input[Symbol.proxy];
       case isNaN:
         return noShouldbe ? `NaN` : maybe({trial: _ => String(compareTo)}) === String(input);
       case isInfinity:
@@ -74,10 +74,8 @@ function TOAFactory() {
   }
   
   function getResult(input, compareWith, noShouldbe, me) {
-    if (!noShouldbe && compareWith === input) {
-      return true;
-    }
-    if (input?.[Symbol.proxy] || input?.constructor?.[Symbol.proxy] && compareWith === Proxy) {
+    if (!noShouldbe && compareWith === input) { return true; }
+    if (input?.[Symbol.proxy] && compareWith === Proxy) {
       return true;
     }
     if (maybe({trial: _ => String(compareWith)}) === `NaN`) {
@@ -89,8 +87,8 @@ function TOAFactory() {
     
     return compareWith
       ? maybe({trial: _ => input instanceof compareWith,}) ||
-      compareWith === me || compareWith === Object.getPrototypeOf(me) ||
-      `${compareWith?.name}` === me?.name
+          compareWith === me || compareWith === Object.getPrototypeOf(me) ||
+          `${compareWith?.name}` === me?.name
       : input?.[Symbol.toStringTag] && `[object ${input?.[Symbol.toStringTag]}]` || me?.name || String(me);
     
   }
@@ -120,21 +118,11 @@ function TOAFactory() {
   function WrapAnyFactory() {
     return function (someObj) {
       return Object.freeze({
-        get value() {
-          return someObj;
-        },
-        get [Symbol.type]() {
-          return typeOf(someObj);
-        },
-        get type() {
-          return typeOf(someObj);
-        },
-        [Symbol.is](...args) {
-          return IS(someObj, ...args);
-        },
-        is(...args) {
-          return IS(someObj, ...args);
-        }
+        get value() { return someObj; },
+        get [Symbol.type]() { return typeOf(someObj); },
+        get type() { return typeOf(someObj); },
+        [Symbol.is](...args) { return IS(someObj, ...args); },
+        is(...args) { return IS(someObj, ...args); }
       });
     }
   }
@@ -156,28 +144,12 @@ function TOAFactory() {
   function addSymbols2Anything() {
     if (!Object.getOwnPropertyDescriptors(Object.prototype)[Symbol.is]) {
       Object.defineProperties(Object.prototype, {
-        [Symbol.type]: {
-          get() {
-            return typeOf(this);
-          },
-        },
-        [Symbol.is]: {
-          value: function (...args) {
-            return IS(this, ...args);
-          }
-        },
+        [Symbol.type]: { get() { return typeOf(this); }, },
+        [Symbol.is]: { value: function (...args) { return IS(this, ...args); } },
       });
       Object.defineProperties(Object, {
-        [Symbol.type]: {
-          value(obj) {
-            return typeOf(obj);
-          },
-        },
-        [Symbol.is]: {
-          value: function (obj, ...args) {
-            return IS(obj, ...args);
-          },
-        },
+        [Symbol.type]: { value(obj) { return typeOf(obj); }, },
+        [Symbol.is]: { value: function (obj, ...args) { return IS(obj, ...args); }, },
       });
     }
   }
