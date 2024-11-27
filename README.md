@@ -15,7 +15,7 @@ The module exports:
     *Note*: for the `{...}` parameter, see the [demonstration page](https://kooiinc.github.io/typeofAnything/Demo)
 
 - `$Wrap`: a function that wraps input and returns an Object with keys:
-   - `value`: the input value 
+   - `value`: the input value (can also be `undefined`, `null`, `NaN` or `Infinity`) 
    - `is([...types]|{...})`: function to determine the type of the wrapped input. This may also be `[Symbol.is]`.
    - `type`: returns (a string representation) of the type of the wrapped input. This may also be `[Symbol.type]`
    
@@ -26,8 +26,7 @@ The module exports:
     *Note*: without a `whenError` parameter, `maybe` returns `undefined` when `trial` fails.
 - `isNothing(input:any[, all: boolean]`: a function to check if input is either `null || undefined`  (`all: false`)
    or `null || undefined || NaN || Infinity` (`all: true`).
-- `xProxy`: in the `typeofAnything` module the native `Proxy` constructor is rewritten, which enables checking if input is
-   a proxy instance (and its constituting type). xProxy is an Object to enable/disable this. Syntax:
+- `xProxy`: in the `typeofAnything` module the native `Proxy` constructor is rewritten, which enables checking if input is  a proxy instance (and its constituting type). xProxy is an Object to enable/disable this. Syntax:
    
    - `xProxy.native()`: use the native ES20xx `Proxy` constructor (disable type checking for proxies - so opt out from module default)
    - `xProxy.custom()`: use the custom `Proxy` constructor (enable type checking for proxies)
