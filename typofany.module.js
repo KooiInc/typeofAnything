@@ -10,7 +10,7 @@ function TOAFactory() {
   const maybe = maybeFactory();
   const [$Wrap, xProxy] = [WrapAnyFactory(), setProxyFactory()];
   xProxy.custom();
-  return { IS, maybe, $Wrap, isNothing, xProxy };
+  return {IS, maybe, $Wrap, isNothing, xProxy};
   
   function IS(anything, ...shouldBe) {
     if (maybe({trial: _ => `isTypes` in (shouldBe?.[0] ?? {})})) {
@@ -32,7 +32,7 @@ function TOAFactory() {
     let { noInput, noShouldbe, compareTo, inputCTOR, isNaN, isInfinity, sbFirstIsNothing } = processInput(input, ...shouldBe);
     shouldBe = shouldBe.length && shouldBe[0];
     
-    switch(true) {
+    switch (true) {
       case sbFirstIsNothing: return String(input) === String(compareTo);
       case input?.[Symbol.proxy] && noShouldbe: return input[Symbol.proxy];
       case isNaN:  return noShouldbe ? `NaN` : maybe({trial: _ => String(compareTo)}) === String(input);
@@ -55,7 +55,7 @@ function TOAFactory() {
     const inputCTOR = !noInput && Object.getPrototypeOf(input)?.constructor;
     const isNaN = maybe({trial: _ => String(input)}) === `NaN`;
     const isInfinity = maybe({trial: _ => String(input)}) === `Infinity`;
-    return { noInput, noShouldbe, compareTo, inputCTOR, isNaN, isInfinity, sbFirstIsNothing};
+    return {noInput, noShouldbe, compareTo, inputCTOR, isNaN, isInfinity, sbFirstIsNothing};
   }
   
   function getResult(input, compareWith, noShouldbe, me) {
@@ -67,10 +67,10 @@ function TOAFactory() {
     }
     
     return compareWith
-      ? maybe({ trial: _ => input instanceof compareWith, }) ||
-        compareWith === me || compareWith === Object.getPrototypeOf(me) ||
-        `${compareWith?.name}` === me?.name
-      : input?.[Symbol.toStringTag] && `[object ${input?.[Symbol.toStringTag]}]`|| me?.name || String(me);
+      ? maybe({trial: _ => input instanceof compareWith,}) ||
+      compareWith === me || compareWith === Object.getPrototypeOf(me) ||
+      `${compareWith?.name}` === me?.name
+      : input?.[Symbol.toStringTag] && `[object ${input?.[Symbol.toStringTag]}]` || me?.name || String(me);
     
   }
   
@@ -86,14 +86,14 @@ function TOAFactory() {
   
   function maybeFactory() {
     const tryFn = (maybeFn, maybeError) => maybeFn?.constructor === Function ? maybeFn(maybeError) : undefined;
-    return function({trial, whenError = () => undefined} = {}) {
+    return function ({trial, whenError = () => undefined} = {}) {
       try { return tryFn(trial) } catch(err) { return tryFn(whenError, err); }
     };
     
   }
   
   function WrapAnyFactory() {
-    return function(someObj) {
+    return function (someObj) {
       return Object.freeze({
         get value() { return someObj; },
         get [Symbol.type]() { return typeOf(someObj); },
@@ -104,16 +104,16 @@ function TOAFactory() {
     }
   }
   
-  function isOrDefault(input, { defaultValue, isTypes = [undefined], notTypes } = {}) {
-    isTypes = isTypes?.constructor !==  Array ? [isTypes] : isTypes;
+  function isOrDefault(input, {defaultValue, isTypes = [undefined], notTypes} = {}) {
+    isTypes = isTypes?.constructor !== Array ? [isTypes] : isTypes;
     notTypes = notTypes && notTypes?.constructor !== Array ? [notTypes] : [];
     return notTypes.length < 1
       ? IS(input, ...isTypes) ? input : defaultValue
       : isExcept(input, {isTypes, notTypes}) ? input : defaultValue;
   }
   
-  function isExcept(input, { isTypes = [undefined], notTypes = [undefined] } = {} ) {
-    isTypes =  isTypes?.constructor !== Array ? [isTypes] : isTypes;
+  function isExcept(input, {isTypes = [undefined], notTypes = [undefined]} = {}) {
+    isTypes = isTypes?.constructor !== Array ? [isTypes] : isTypes;
     notTypes = notTypes?.constructor !== Array ? [notTypes] : notTypes;
     return IS(input, ...isTypes) && !IS(input, ...notTypes);
   }
@@ -133,7 +133,20 @@ function TOAFactory() {
   
   function ctor2String(obj) {
     const str = String(Object.getPrototypeOf(obj)?.constructor);
-    return str.slice(str.indexOf(`ion`)+3, str.indexOf(`(`)).trim();
+    return str.slice(str.indexOf(`ion`) + 3, str.indexOf(`(`)).trim();
+  }
+  
+  function modifySetter(setterMethod2Modify) {
+    const oldSetter = setterMethod2Modify.set;
+    setterMethod2Modify.set = (target, key, value) => {
+      if (key === Symbol.proxy) {
+        return target[key] = value;
+      }
+      
+      return oldSetter(target, key, value);
+    }
+    
+    return setterMethod2Modify;
   }
   
   function setProxyFactory() {
@@ -146,14 +159,18 @@ function TOAFactory() {
         // adaptation of https://stackoverflow.com/a/53463589
         Proxy = new nativeProxy(nativeProxy, {
           construct(target, args) {
-            const proxy = new target(...args);
-            maybe( { trial: _ => {
-                proxy[Symbol.proxy] = `Proxy (${ctor2String(args[0])})`;
-                return true; } } );
-            return proxy;
+            for (let item of args) {
+              if (item.set) {
+                item = modifySetter(item);
+              }
+            }
+            
+            const wrappedProxy = new target(...args);
+            wrappedProxy[Symbol.proxy] = `Proxy (${ctor2String(args[0])})`;
+            return wrappedProxy;
           }
-        });
+        })
       }
-    };
+    }
   }
 }
