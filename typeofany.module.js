@@ -144,12 +144,12 @@ function TOAFactory() {
   function addSymbols2Anything() {
     if (!Object.getOwnPropertyDescriptors(Object.prototype)[Symbol.is]) {
       Object.defineProperties(Object.prototype, {
-        [Symbol.type]: { get() { return typeOf(this); }, },
-        [Symbol.is]: { value: function (...args) { return IS(this, ...args); } },
+        [Symbol.type]: { get() { return typeOf(this); }, enumerable: false, configurable: false },
+        [Symbol.is]: { value: function (...args) { return IS(this, ...args); }, enumerable: false, configurable: false },
       });
       Object.defineProperties(Object, {
-        [Symbol.type]: { value(obj) { return typeOf(obj); }, },
-        [Symbol.is]: { value: function (obj, ...args) { return IS(obj, ...args); }, },
+        [Symbol.type]: { value(obj) { return typeOf(obj); }, enumerable: false, configurable: false },
+        [Symbol.is]: { value: function (obj, ...args) { return IS(obj, ...args); }, enumerable: false, configurable: false },
       });
     }
   }
