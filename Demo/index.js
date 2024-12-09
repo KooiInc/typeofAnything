@@ -12,6 +12,7 @@ const printHTML = html => html.replace(/</g, `&lt;`);
 window.IS = IS;
 let [nTests, failed, succeeded] = [0, 0, 0];
 const resultBox = createResultBox();
+const mdnReferencePrefix = "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference";
 printExamples();
 
 document.querySelectorAll(`code.block`)
@@ -36,6 +37,7 @@ function getHeader() {
       <br><b>Note</b> Every example is a <i>test</i> for the given code. The 'received' value is the
       result of the executed code. Two tests of all examples always fail by design.
       <br><button id="showResults">Show test counts</button>
+      <button id="failedOnly" data-filtered="0">Show failed tests only</button>
     </div>
     <div class="normal noborder"><h3>Code used for examples</h3></div>
     <code class="block">
@@ -184,9 +186,26 @@ function testCounts2Popover() {
 }
 
 function handle(evt) {
+  const filterFailed = evt.target.closest(`#failedOnly`);
   const popoverClose = evt.target.closest(`#testResults`);
   const popoverOpen = evt.target.closest(`#showResults`);
   const toTop = evt.target.closest(`[data-content-text]`);
+  
+  if (filterFailed) {
+    const isFiltered = filterFailed.dataset.filtered === "1";
+    const allOk = document.querySelectorAll(`.ok`);
+    
+    if (!isFiltered) {
+      allOk.forEach(el => el.closest(`li`).classList.add(`hidden`));
+      filterFailed.textContent = `Show all tests`;
+      document.querySelector(`.testErr`).scrollIntoView();
+      return filterFailed.dataset.filtered = "1";
+    }
+    
+    allOk.forEach(el => el.closest(`li`).classList.remove(`hidden`));
+    filterFailed.textContent = `Show failed tests only`;
+    return filterFailed.dataset.filtered = "0";
+  }
   
   if (popoverOpen) {
     testCounts2Popover();
@@ -266,8 +285,14 @@ function retrieveAllTests(variables) {
     _ => test(_ => IS(not_a_nr, NaN), true),
     _ => test(_ => IS(1/0, Infinity), true),
     _ => test(_ => IS(flse), `Boolean`),
-    _ => test(_ => IS({} + [], String /* ES peculiarity */), true),
-    _ => test(_ => IS(true + false, Number /* ES peculiarity */), true),
+    t => `<div class="normal">ECMAScript peculiarities
+        (<a target="_blank" href="https://2ality.com/2012/01/object-plus-object.html"
+        >why?</a>)</div>`,
+    _ => test(_ => IS({} + {}, Object), false),
+    _ => test(_ => IS({} + {}, String /* in Firefox *console*: NaN */), true),
+    _ => test(_ => IS({} + [], Object, Number, Array, NaN), false),
+    _ => test(_ => IS({} + [], String), true),
+    _ => test(_ => IS(true + false, Number), true),
     
     t => `<div class="normal" id="symbolicExt" data-content-text="The Object symbolic extension"><b>The Object symbolic extension</b></div>`,
     _ => test(_ => [][type], `Array`),
@@ -533,33 +558,42 @@ function retrieveAllTests(variables) {
               <br>One can check such non-available global constructors using their string representation,
               <br>e.g. <code>IS(new Float32Array(1), "Float32Array")</code>
               <br><br>See also: <a target="_blank"
-                href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/toStringTag"
+                href="${mdnReferencePrefix}/Global_Objects/Symbol/toStringTag"
                 >MDN documentation</a></div>
             </div>`,
     _ => test(_ => div[type], `[object HTMLDivElement]`),
     _ => test(_ => Symbol.for(`is`)[type], `[object Symbol]`),
     _ => test(_ => Symbol.is[Symbol.is](Symbol /* known global constructor */), true),
     _ => test(_ => new Intl.Collator()[type], `[object Intl.Collator]`),
-    _ => test(_ => new Intl.Collator()[is](`Intl.Collator`), true),
+    _ => test(_ => new Intl.Collator()[is](Intl.Collator), true),
     _ => test(_ => new Intl.Collator()[is](Object), true),
     _ => test(_ => new Float32Array(1)[type], `[object Float32Array]`),
-    _ => test(_ => new Float32Array(1)[is](TypedArray /* not a known global constructor */), false),
-    _ => test(_ => new Float32Array(1)[is](Array, "Float32Array"), true),
+    t => `<div class="normal"><code>TypedArray</code> is not
+        <a target="_blank" href="${mdnReferencePrefix}/Global_Objects/TypedArray"
+        >a known  global constructor</a></div>`,
+    _ => test(_ => new Float32Array(1)[is](TypedArray), false),
+    _ => test(_ => new Float32Array(1)[is](Array, Float32Array), true),
+    _ => test(_ => new Float32Array(1)[is](`Float32Array`), true),
     _ => test(_ => new Float32Array(1)[is](Object), true),
     _ => test(_ => new DataView(new ArrayBuffer(2))[type], `[object DataView]`),
     _ => test(_ => new FinalizationRegistry(_ => {})[type], `[object FinalizationRegistry]`),
-    _ => test(_ => new FinalizationRegistry(_ => {})[is]("FinalizationRegistry"), true),
-    _ => test(_ => new FinalizationRegistry(_ => {})[is](Function, "FinalizationRegistry"), true),
-    _ => test(_ => new FinalizationRegistry(_ => {})[is](Function), false),
+    _ => test(_ => new FinalizationRegistry(_ => {})[is](`FinalizationRegistry`), true),
+    _ => test(_ => new FinalizationRegistry(_ => {})[is](FinalizationRegistry), true),
+    _ => test(_ => new FinalizationRegistry(_ => {})[is](Function, FinalizationRegistry), true),
     _ => test(_ => new FinalizationRegistry(_ => {})[is](Object), true),
+    _ => test(_ => new FinalizationRegistry(_ => {})[is](Function), false),
     _ => test(_ => Iterator[type], `Function`),
     _ => test(_ => Iterator.from([1,2,3])[type], `[object Array Iterator]`),
-    _ => test(_ => Iterator.from([1,2,3])[is](`Array Iterator`), true),
+    _ => test(_ => Iterator.from([1,2,3])[is](Iterator), true),
     _ => test(_ => Iterator.from([1,2,3])[is](Object), true),
+    t => `<div class="normal"><code>SharedArrayBuffer</code> is not available due to missing
+        <a target="_blank"
+          href="${mdnReferencePrefix}/Global_Objects/SharedArrayBuffer/SharedArrayBuffer#security_requirements"
+        >security requirements</a></div>`,
     _ => test(_ => new SharedArrayBuffer(16)?.[type], `[object SharedArrayBuffer]`),
     _ => test(_ => Intl[type], `[object Intl]`),
     _ => test(_ => Intl[is](Object), true),
-    _ => test(_ => Intl[is](`Intl`), true),
+    _ => test(_ => String(Intl)[is](`[object Intl]`), true),
     _ => test(_ => Intl.Collator[type], `Function`),
     _ => test(_ => Intl.Collator[is](Function), true),
     _ => test(_ => new Intl.Collator(`nl`)[type], `[object Intl.Collator]`),
@@ -569,6 +603,7 @@ function retrieveAllTests(variables) {
     _ => test(_ => Math[type], `[object Math]`),
     _ => test(_ => new Promise((a, b) => {})[type], `[object Promise]`),
     _ => test(_ => new Promise((a, b) => {})[is](Promise), true),
+    _ => test(_ => new Promise((a, b) => {})[is](`Promise`), true),
     _ => test(_ => function* () {}[type], `[object GeneratorFunction]`),
     _ => test(_ => function* () {}[is](Function), true),
     _ => test(_ => function* () {}[is](`GeneratorFunction`), true),

@@ -42,6 +42,7 @@ body {
   .container {
     inset: 0;
     position: absolute;
+    padding-bottom: 50rem;
 
     & [popover] {
       box-shadow: 2px 2px 8px #999;
@@ -90,6 +91,7 @@ body {
     #log2screen {
       position: relative;
       margin: 0 auto;
+      padding-bottom: 100rem;
       max-width: 800px;
 
       li {
