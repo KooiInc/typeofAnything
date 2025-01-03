@@ -119,7 +119,6 @@ function TOAFactory() {
         return tryFn(whenError, err)
       }
     };
-    
   }
   
   function WrapAnyFactory() {
