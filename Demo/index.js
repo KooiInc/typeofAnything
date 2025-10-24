@@ -1,5 +1,5 @@
 import { default as IS, maybe, $Wrap, isNothing, xProxy }
-  from "../typeofany.module.js";
+  from "../Dist/toa.min.js";
 
 const {log} = logFactory();
 
@@ -42,7 +42,7 @@ function getHeader() {
     <div class="normal noborder"><h3>Code used for examples</h3></div>
     <code class="block">
     // import & initialize
-    import { 
+    import {
       default as IS, // the main type checking function
       maybe,         // a try/catch wrapper utility function
       $Wrap,         // wrapper for any variable
@@ -58,7 +58,7 @@ function getHeader() {
 
     // definitions used in the following examples
     const [tru, flse, zero, not_a_nr, nil, undef, div, div2, nonDiv, proxyEx] =
-      [true, false, 0, +("NaN"), null, undefined, 
+      [true, false, 0, +("NaN"), null, undefined,
        Object.assign(document.createElement("div"), {textContent: "I am div"}),
        Object.assign(document.createElement("div"), {textContent: "I am div 2"}),
        document.createElement("unknown"),
@@ -70,7 +70,7 @@ function getHeader() {
     }
     // a proxy
     function someProxy() {
-      return new Proxy(new String("hello"), { 
+      return new Proxy(new String("hello"), {
         get(obj, key) { return key === 'world' ? (obj += " world") && obj : obj[key] }
       });
     }</code>`.replace(/\n {4}/g, `\n`);
