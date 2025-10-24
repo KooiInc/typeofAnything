@@ -1,9 +1,12 @@
 const { IS, maybe, $Wrap, xProxy, isNothing } = TOAFactory();
 const is = Symbol.is;
 const type = Symbol.type;
+const otherDemoLink = `<a target="_top" href="./index.html">Module version</a>`;
+
 // -----------------------------------
 const {log} = logFactory();
 const printHTML = html => html.replace(/</g, `&lt;`);
+window.IS = IS;
 let [nTests, failed, succeeded] = [0, 0, 0];
 const resultBox = createResultBox();
 const mdnReferencePrefix = "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference";
@@ -25,13 +28,16 @@ function getHeader() {
     ? `<a target="_top" href="https://github.com/KooiInc/typeofAnything">Back to repository</a>`
     : `<a target="_top" href="https://stackblitz.com/@KooiInc">All projects</a>`;
   return `!!<div class="normal noborder">${backLink}
+    | ${otherDemoLink}
     | <a target="_blank" href="https://www.npmjs.com/package/typeofanything">@NPM</a></div>
     <div class="normal"><h3>TypeofAnything: determine/check the type of nearly any (ECMAScript) thing</h3>
       (including null/undefined/NaN/true/false etc.).
       <br><b>Note</b> Every example is a <i>test</i> for the given code. The 'received' value is the
       result of the executed code. Two tests of all examples always fail by design.
-      <br><button id="showResults">Show test counts</button>
-      <button id="failedOnly" data-filtered="0">Show failed tests only</button>
+      <div class="normal noborder center">
+        <button id="showResults">Test counts</button>
+        <button id="failedOnly" data-filtered="0">Show failed tests only</button>
+      </div>
     </div>
     <div class="normal noborder"><h3>Code used for examples</h3></div>
     <code class="block">
@@ -102,16 +108,6 @@ function codeExamples() {
     Object.assign(document.createElement("div"), {textContent: "I am div 2"}),
     document.createElement("unknown"),
     someProxy(), SomeCTOR];
-  
-  function SomeCTOR(something) {
-    this.something = something;
-  }
-  
-  function someProxy() {
-    return new Proxy(new String(`hello`), {
-      get(obj, key) { return key === 'world' ? ((obj += " world"), obj) : obj[key] }
-    });
-  }
   
   log(getHeader());
   return retrieveAllTests(testVariables);
@@ -625,4 +621,14 @@ function retrieveAllTests(variables) {
     _ => test(_ => div[is](HTMLUListElement), false),
     _ => test(_ => div[is](HTMLUListElement, HTMLAreaElement, Node), true),
   ];
+}
+
+function SomeCTOR(something) {
+  this.something = something;
+}
+
+function someProxy() {
+  return new Proxy(new String(`hello`), {
+    get(obj, key) { return key === 'world' ? ((obj += " world"), obj) : obj[key] }
+  });
 }

@@ -143,7 +143,7 @@ body {
           }
 
           .normal {
-            line-height: 1.5rem;
+            line-height: 1.3rem;
             font-weight: normal;
             margin: 12px 0 6px;
             color: rgb(69, 104, 161);
@@ -153,6 +153,10 @@ body {
             b {
               color: rgb(179, 21, 55);
             }
+          }
+
+          .center {
+            text-align: center;
           }
 
           .normal[data-content-text] {
@@ -184,6 +188,3 @@ body {
     }
   }
 }
-
-
-
