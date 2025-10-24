@@ -74,3 +74,10 @@ Subsequently in your script (for example)
   /* ... */
 </script>
 ```
+
+## Minified
+Both the module- and browser-script versions are available as minified js files
+in the `./Dist` directory, downloadable from e.g. `unpkg`
+
+- module: https://unpkg.com/typeofanything@latest/Dist/toa.min.js
+- script: https://unpkg.com/typeofanything@latest/Dist/toa.browser.min.js
