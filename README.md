@@ -6,8 +6,9 @@ The code is available as an ESM module, as a browser script and as a browser scr
 
 The module is also available from [NPM](https://www.npmjs.com/package/typeofanything).
 
-## Exports
-The module exports:
+## Module version
+
+### The module exports:
 - `default`: a function to determine the type of a given input. Syntax:
 
    `[imported default function](input, [...type] | {...})`
@@ -32,8 +33,16 @@ The module exports:
    - `xProxy.custom()`: use the custom `Proxy` constructor (enable type checking for proxies)
 
 For an extensive set of examples see
-the [demonstration page](https://kooiinc.github.io/typeofAnything/Demo)
+the [module demonstration page](https://kooiinc.github.io/typeofAnything/Demo)
 or fiddle with it with a fork of this [Stackblitz project](https://stackblitz.com/edit/js-qem4v7?file=typeofAnything.js).
+
+## Script version
+The script version makes the factory `TOAFactory` globally available. Invoking the factory delivers an Object encapsulating
+the beforementioned exports (except `default`, that's just `IS`).
+
+For an extensive set of examples see
+the [script demonstration page](https://kooiinc.github.io/typeofAnything/Demo/index-brwsr.html)
+
 
 ## Import the module
 
@@ -41,9 +50,10 @@ Your script should be of type `module`.
 
 ```html
 <script type="module">
-  import IS from "[path to]/typeofany.module.js";
-  // or 
-  const IS = (await import("[path to]/typeofany.module.js")).default;
+  import {default as IS, $Wrap} from "[install path]/Src/typeofany.module.js";
+  const isObject = IS({}, Array, Object);
+  const nothing = null;
+  const isNothingNull = nothing?.[is](null) || $Wrap(nothing).is(null);
 </script>
 ```
 
@@ -51,35 +61,16 @@ Your script should be of type `module`.
 Create a script tag in your html:
 
 ```html
-<script src="[path to]/typeofany.browser.js")</script>
+<script src="[install path]/Src/typeofany.browser.js")</script>
 ```
 Subsequently in your script (for example)
 
 ```html
 <script>
+  const {IS, $Wrap} = TOAFactory(); 
   const isObject = IS({}, Array, Object);
   const nothing = null;
   const isNothingNull = nothing?.[is](null) || $Wrap(nothing).is(null); 
-  /* ... */
-</script>
-```
-
-## Use in browser with factory
-Create a script tag in your html:
-
-```html
-<script src="[path to]/typeofany.browser-factory.js")</script>
-```
-
-Subsequently in your script (for example)
-
-```html
-<script>
-  const {IS, $Wrap} = TOAFactory();
-  const isObject = IS({}, Array, Object);
-  const nothing = null;
-  const isNothingNull = nothing?.is(null) || $Wrap(nothing).is(null);
-  
   /* ... */
 </script>
 ```
