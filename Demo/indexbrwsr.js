@@ -22,7 +22,32 @@ document.querySelectorAll(`code.block`)
 
 Prism.highlightAll();
 
+function printExamples() {
+  document.addEventListener(`click`, handle);
+  const allTests = codeExamples();
+  
+  for (const testEx of allTests) {
+    if (testEx.toString().startsWith(`t`)) {
+      const txt2Log = testEx();
+      txt2Log &&  log(`!!${testEx()}`);
+      continue;
+    }
+    
+    logExampleCB(testEx);
+  }
+  
+  positionToTopArrow();
+  addContentIndex();
+}
+
+function positionToTopArrow() {
+  const ul = document.querySelector(`#log2screen`);
+  document.querySelector(`.arrowToTop`).style.left = (ul.offsetLeft + ul.clientWidth + 10) + `px`;
+}
+
 function getHeader() {
+  document.querySelector(`.container`)
+    .insertAdjacentHTML(`afterbegin`, `<div class="arrowToTop" title="Content ↑"></div>`);
   const backLink = /github\.io|localhost/i.test(location.href)
     ? `<a target="_top" href="https://github.com/KooiInc/typeofAnything">Back to repository</a>`
     : `<a target="_top" href="https://stackblitz.com/@KooiInc">All projects</a>`;
@@ -111,23 +136,6 @@ function logExampleCB(example) {
   }
 }
 
-function printExamples() {
-  document.addEventListener(`click`, handle);
-  const allTests = codeExamples();
-  
-  for (const testEx of allTests) {
-    if (testEx.toString().startsWith(`t`)) {
-      const txt2Log = testEx();
-      txt2Log &&  log(`!!${testEx()}`);
-      continue;
-    }
-    
-    logExampleCB(testEx);
-  }
-  
-  addContentIndex();
-}
-
 function testCounts2Popover() {
   if (resultBox.querySelector(`ul`)) { return; }
   
@@ -145,7 +153,7 @@ function handle(evt) {
   const filterFailed = evt.target.closest(`#failedOnly`);
   const popoverClose = evt.target.closest(`#testResults`);
   const popoverOpen = evt.target.closest(`#showResults`);
-  const toTop = evt.target.closest(`[data-content-text]`) || evt.target.closest(`[data-to-top]`);
+  const toTop = evt.target.closest(`[data-content-text]`) || evt.target.closest(`[data-to-top]`) || evt.target.classList.contains('arrowToTop');
   
   switch(true) {
     case !!filterFailed:
@@ -157,19 +165,17 @@ function handle(evt) {
         document.querySelectorAll(`li`).forEach(el => el.classList.add('hidden'));
         document.querySelector(`[data-bttnblock]`).closest(`li`).classList.remove('hidden');
         errors.forEach(el => el.closest(`li`).classList.remove('hidden'));
-        //filterFailed.textContent = `Show all`;
         return filterFailed.dataset.filtered = "1";
       }
       
       document.querySelectorAll(`.hidden`).forEach(el => el.classList.remove(`hidden`));
-      //filterFailed.textContent = `Failed tests only`;
       
       return filterFailed.dataset.filtered = "0";
     case !!popoverClose: return popoverClose.hidePopover();
     case !!popoverOpen:
       testCounts2Popover();
       return resultBox.showPopover();
-    case !!toTop: return document.querySelector(`.container`).scrollIntoView();
+    case !!toTop: return document.querySelector(`.container`).scrollIntoView({behavior: 'smooth'});
     default: return true;
   }
 }
