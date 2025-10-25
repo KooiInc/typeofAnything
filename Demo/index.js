@@ -9,7 +9,6 @@ const otherDemoLink = `<a target="_top" href="./index-brwsr.html">Browser script
 // -----------------------------------
 const {log} = logFactory();
 const printHTML = html => html.replace(/</g, `&lt;`);
-window.IS = IS;
 let [nTests, failed, succeeded] = [0, 0, 0];
 const resultBox = createResultBox();
 const mdnReferencePrefix = "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference";
@@ -30,53 +29,21 @@ function getHeader() {
   const backLink = /github\.io|localhost/i.test(location.href)
     ? `<a target="_top" href="https://github.com/KooiInc/typeofAnything">Back to repository</a>`
     : `<a target="_top" href="https://stackblitz.com/@KooiInc">All projects</a>`;
-  return `!!<div class="normal noborder">${backLink}
+  return [`!!<div class="normal noborder">${backLink}
     | ${otherDemoLink}
     | <a target="_blank" href="https://www.npmjs.com/package/typeofanything">@NPM</a></div>
     <div class="normal"><h3>TypeofAnything: determine/check the type of nearly any (ECMAScript) thing</h3>
       (including null/undefined/NaN/true/false etc.).
-      <br><b>Note</b> Every example is a <i>test</i> for the given code. The 'received' value is the
-      result of the executed code. Two tests of all examples always fail by design.
-      <div class="normal noborder center">
-        <button id="showResults">Test counts</button>
-        <button id="failedOnly" data-filtered="0">Show failed tests only</button>
-      </div>
+      <br><b>Note</b> Every example doubles as <i><b>test</b></i> for the given code.
+      The 'received' value is the result of the executed code. Two tests of all examples
+      always fail by design.
     </div>
     <div class="normal noborder"><h3>Code used for examples</h3></div>
-    <code class="block">
-    // import & initialize
-    import {
-      default as IS, // the main type checking function
-      maybe,         // a try/catch wrapper utility function
-      $Wrap,         // wrapper for any variable
-      isNothing,     // special function for empty stuff (null, NaN etc)
-      xProxy,        /* Object for Proxy implementation. Syntax:
-                        xProxy.custom() => default, type check for Proxy enabled
-                        xProxy.native() => native ES20xx implementation */
-    } from "./typeofAnything.js";
-    
-    // assign symbols from library
-    const is = Symbol.is;
-    const type = Symbol.type;
-
-    // definitions used in the following examples
-    const [tru, flse, zero, not_a_nr, nil, undef, div, div2, nonDiv, proxyEx] =
-      [true, false, 0, +("NaN"), null, undefined,
-       Object.assign(document.createElement("div"), {textContent: "I am div"}),
-       Object.assign(document.createElement("div"), {textContent: "I am div 2"}),
-       document.createElement("unknown"),
-       someProxy()];
-    
-    // a constructor
-    function SomeCTOR(something) {
-      this.something = something;
-    }
-    // a proxy
-    function someProxy() {
-      return new Proxy(new String("hello"), {
-        get(obj, key) { return key === 'world' ? (obj += " world") && obj : obj[key] }
-      });
-    }</code>`.replace(/\n {4}/g, `\n`);
+    ${getHeaderCodeBlock()}`,
+    `!!<div class="normal center noborder" data-bttnblock="true">
+        <button id="showResults">Test counts</button>
+        <button id="failedOnly" data-filtered="0"></button>
+       </div>`];
 }
 
 function test(testFn, expected) {
@@ -111,8 +78,8 @@ function codeExamples() {
       Object.assign(document.createElement("div"), {textContent: "I am div 2"}),
       document.createElement("unknown"),
       someProxy(), SomeCTOR];
+  log(...getHeader());
   
-  log(getHeader());
   return retrieveAllTests(testVariables);
 }
 
@@ -151,15 +118,14 @@ function printExamples() {
   document.addEventListener(`click`, handle);
   const allTests = codeExamples();
   
-  for (let i = 0; i < allTests.length; i += 1) {
-    const ex = allTests[i];
-    if (ex.toString().startsWith(`t`)) {
-      const txt2Log = ex();
-      txt2Log &&  log(`!!${ex()}`);
+  for (const testEx of allTests) {
+    if (testEx.toString().startsWith(`t`)) {
+      const txt2Log = testEx();
+      txt2Log &&  log(`!!${testEx()}`);
       continue;
     }
     
-    logExampleCB(ex);
+    logExampleCB(testEx);
   }
   
   addContentIndex();
@@ -182,35 +148,32 @@ function handle(evt) {
   const filterFailed = evt.target.closest(`#failedOnly`);
   const popoverClose = evt.target.closest(`#testResults`);
   const popoverOpen = evt.target.closest(`#showResults`);
-  const toTop = evt.target.closest(`[data-content-text]`);
+  const toTop = evt.target.closest(`[data-content-text]`) || evt.target.closest(`[data-to-top]`);
   
-  if (filterFailed) {
-    const isFiltered = filterFailed.dataset.filtered === "1";
-    const allOk = document.querySelectorAll(`.ok`);
-    
-    if (!isFiltered) {
-      allOk.forEach(el => el.closest(`li`).classList.add(`hidden`));
-      filterFailed.textContent = `Show all tests`;
-      document.querySelector(`.testErr`).scrollIntoView();
-      return filterFailed.dataset.filtered = "1";
-    }
-    
-    allOk.forEach(el => el.closest(`li`).classList.remove(`hidden`));
-    filterFailed.textContent = `Show failed tests only`;
-    return filterFailed.dataset.filtered = "0";
-  }
-  
-  if (popoverOpen) {
-    testCounts2Popover();
-    return resultBox.showPopover();
-  }
-  
-  if (popoverClose) {
-    return popoverClose.hidePopover();
-  }
-  
-  if (toTop) {
-    return document.querySelector(`.container`).scrollIntoView();
+  switch(true) {
+    case !!filterFailed:
+      const isFiltered = filterFailed.dataset.filtered === "1";
+      const allOk = document.querySelectorAll(`.ok`);
+      const errors = [...document.querySelectorAll(`.testErr`)];
+      
+      if (errors.length > 0 && !isFiltered) {
+        document.querySelectorAll(`li`).forEach(el => el.classList.add('hidden'));
+        document.querySelector(`[data-bttnblock]`).closest(`li`).classList.remove('hidden');
+        errors.forEach(el => el.closest(`li`).classList.remove('hidden'));
+        //filterFailed.textContent = `Show all`;
+        return filterFailed.dataset.filtered = "1";
+      }
+      
+      document.querySelectorAll(`.hidden`).forEach(el => el.classList.remove(`hidden`));
+      //filterFailed.textContent = `Failed tests only`;
+      
+      return filterFailed.dataset.filtered = "0";
+    case !!popoverClose: return popoverClose.hidePopover();
+    case !!popoverOpen:
+      testCounts2Popover();
+      return resultBox.showPopover();
+    case !!toTop: return document.querySelector(`.container`).scrollIntoView();
+    default: return true;
   }
 }
 
@@ -373,6 +336,8 @@ function retrieveAllTests(variables) {
     _ => test(_ => new Proxy(new Date(), {})[type], `Proxy (Date)`),
     _ => test(_ => new Proxy(new Date(), {})[is](Date), true),
     _ => test(_ => new Proxy(new Date(), {})[is](Proxy), true),
+    t => `<div class="normal"><b>Note</b>: <code>proxyEx</code> is created with <code>someProxy()</code>
+             (see <span data-to-top="n/a"><b>code block</b></span> in the top of the document)</div>`,
     _ => test(_ => proxyEx[type], `Proxy (String)`),
     _ => test(_ => proxyEx[is](Proxy), true),
     _ => test(_ => proxyEx[is](String), true),
@@ -634,4 +599,42 @@ function someProxy() {
   return new Proxy(new String(`hello`), {
     get(obj, key) { return key === 'world' ? ((obj += " world"), obj) : obj[key] }
   });
+}
+
+// ---
+function getHeaderCodeBlock() {
+  return `<code class="block">
+    // import & initialize
+    import {
+      default as IS, // the main type checking function
+      maybe,         // a try/catch wrapper utility function
+      $Wrap,         // wrapper for any variable
+      isNothing,     // special function for empty stuff (null, NaN etc)
+      xProxy,        /* Object for Proxy implementation. Syntax:
+                          xProxy.custom() => default, type check for Proxy enabled
+                          xProxy.native() => native ES20xx implementation */
+    } from "./typeofAnything.js";
+    
+    // assign symbols (set from library)
+    const is = Symbol.is;
+    const type = Symbol.type;
+    
+    // definitions used in the following examples
+    const [tru, flse, zero, not_a_nr, nil, undef, div, div2, nonDiv, proxyEx] =
+      [ true, false, 0, +("NaN"), null, undefined,
+      Object.assign(document.createElement("div"), {textContent: "I am div"}),
+      Object.assign(document.createElement("div"), {textContent: "I am div 2"}),
+      document.createElement("unknown"),
+      someProxy() ];
+    
+    // a constructor
+    function SomeCTOR(something) {
+      this.something = something;
+    }
+    // a proxy
+    function someProxy() {
+      return new Proxy(new String("hello"), {
+        get(obj, key) { return key === 'world' ? (obj += " world") && obj : obj[key] }
+      });
+    }</code>`.replace(/\n {4}/g, `\n`);
 }

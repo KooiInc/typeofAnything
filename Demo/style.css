@@ -88,6 +88,14 @@ body {
       margin: 1px 0;
     }
 
+    [data-filtered="1"]:after {
+      content: "Display all";
+    }
+
+    [data-filtered="0"]:after {
+      content: "Display failed only";
+    }
+
     #log2screen {
       position: relative;
       margin: 0 auto;
@@ -159,7 +167,7 @@ body {
             text-align: center;
           }
 
-          .normal[data-content-text] {
+          .normal[data-content-text], [data-to-top] {
             b:first-child {
               cursor: pointer;
               &:hover {
