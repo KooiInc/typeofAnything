@@ -1,5 +1,5 @@
 import { default as IS, maybe, $Wrap, isNothing, xProxy }
-  from "../Dist/toa.min.js";
+  from "../Src/typeofany.module.js";
 
 // assign symbols from library
 const is = Symbol.is;
@@ -12,6 +12,7 @@ const printHTML = html => html.replace(/</g, `&lt;`);
 let [nTests, failed, succeeded] = [0, 0, 0];
 const resultBox = createResultBox();
 const mdnReferencePrefix = "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference";
+xProxy.custom();
 printExamples();
 
 document.querySelectorAll(`code.block`)
@@ -41,6 +42,8 @@ function printExamples() {
   
   positionToTopArrow();
   addContentIndex();
+  document.querySelector(`#showResults`).click();
+  setTimeout(_ => document.querySelector(`#closePopover`).click(), 3000);
 }
 
 function positionToTopArrow() {
@@ -617,13 +620,16 @@ function getHeaderCodeBlock() {
       $Wrap,         // wrapper for any variable
       isNothing,     // special function for empty stuff (null, NaN etc)
       xProxy,        /* Object for Proxy implementation. Syntax:
-                          xProxy.custom() => default, type check for Proxy enabled
-                          xProxy.native() => native ES20xx implementation */
+                        xProxy.custom() => type check for Proxy enabled
+                        xProxy.native() => default: native ES20xx implementation */
     } from "./typeofAnything.js";
     
     // assign symbols (set from library)
     const is = Symbol.is;
     const type = Symbol.type;
+    
+    // enable Proxy type detection
+    xProxy.custom();
     
     // definitions used in the following examples
     const [tru, flse, zero, not_a_nr, nil, undef, div, div2, nonDiv, proxyEx] =

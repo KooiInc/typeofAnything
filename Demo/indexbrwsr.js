@@ -1,7 +1,8 @@
 const { IS, maybe, $Wrap, xProxy, isNothing } = TOAFactory();
+// assign symbols from library
 const is = Symbol.is;
 const type = Symbol.type;
-const otherDemoLink = `<a target="_top" href="./index.html">Module version</a>`;
+const otherDemoLink = `<a target="_top" href="./index-brwsr.html">Browser script version</a>`;
 
 // -----------------------------------
 const {log} = logFactory();
@@ -9,6 +10,7 @@ const printHTML = html => html.replace(/</g, `&lt;`);
 let [nTests, failed, succeeded] = [0, 0, 0];
 const resultBox = createResultBox();
 const mdnReferencePrefix = "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference";
+xProxy.custom();
 printExamples();
 
 document.querySelectorAll(`code.block`)
@@ -38,6 +40,8 @@ function printExamples() {
   
   positionToTopArrow();
   addContentIndex();
+  document.querySelector(`#showResults`).click();
+  setTimeout(_ => document.querySelector(`#closePopover`).click(), 3000);
 }
 
 function positionToTopArrow() {
@@ -613,6 +617,9 @@ function getHeaderCodeBlock() {
     // assign symbols (set from library)
     const is = Symbol.is;
     const type = Symbol.type;
+    
+    // enable Proxy type detection
+    xProxy.custom();
     
     // definitions used in the following examples
     const [tru, flse, zero, not_a_nr, nil, undef, div, div2, nonDiv, proxyEx] =
