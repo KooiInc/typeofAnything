@@ -98,10 +98,8 @@ window.TOAFactory = function TOAFactory(specs = {}) {
   }
   
   function maybeFactory() {
-    //const tryFn = (maybeFn, maybeError) => maybeFn?.constructor === Function ? maybeFn(maybeError) : undefined;
     const errFn = err => undefined;
     return function({trial, whenError = errFn } = {}) {
-      //try { return tryFn(trial) } catch (err) { return tryFn(whenError, err) }
       try { return trial(); } catch (err) { return whenError(err); }
     };
   }
