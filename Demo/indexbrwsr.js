@@ -3,7 +3,7 @@ const { IS, maybe, $Wrap, xProxy, isNothing, addSymbolicExtensions } = TOAFactor
 addSymbolicExtensions();
 const is = Symbol.is;
 const type = Symbol.type;
-const otherDemoLink = `<a target="_top" href="./index-brwsr.html">Browser script version</a>`;
+const otherDemoLink = `<a target="_top" href="./index.html">Module script version</a>`;
 
 // -----------------------------------
 const {log} = logFactory();
