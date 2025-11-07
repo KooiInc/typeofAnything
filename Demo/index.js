@@ -1,7 +1,8 @@
-import { default as IS, maybe, $Wrap, isNothing, xProxy }
+import { default as IS, maybe, $Wrap, isNothing, xProxy, addSymbolicExtensions }
   from "../Src/typeofany.module.js";
 
 // assign symbols from library
+addSymbolicExtensions();
 const is = Symbol.is;
 const type = Symbol.type;
 const otherDemoLink = `<a target="_top" href="./index-brwsr.html">Browser script version</a>`;
@@ -12,7 +13,6 @@ const printHTML = html => html.replace(/</g, `&lt;`);
 let [nTests, failed, succeeded] = [0, 0, 0];
 const resultBox = createResultBox();
 const mdnReferencePrefix = "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference";
-xProxy.custom();
 printExamples();
 
 document.querySelectorAll(`code.block`)
@@ -48,7 +48,7 @@ function printExamples() {
 
 function positionToTopArrow() {
   const ul = document.querySelector(`#log2screen`);
-  document.querySelector(`.arrowToTop`).style.left = (ul.offsetLeft + ul.clientWidth + 10) + `px`;
+  document.querySelector(`.arrowToTop`).style.left = (ul.offsetLeft + ul.clientWidth - 32) + `px`;
 }
 
 function getHeader() {
@@ -115,22 +115,6 @@ function toCode(str, res) {
   return `<code>${str}</code>`;
 }
 
-function addContentIndex() {
-  const contentElements = document.querySelectorAll(`[data-content-text]`);
-  const ul = Object.assign(document.createElement("ul"), {classList: `content`});
-  ul.insertAdjacentHTML(`beforeend`, `<li class="head"><h3>Content</h3></li>`);
-  contentElements.forEach(element => {
-    ul.insertAdjacentHTML(`beforeend`,
-      `<li><a href="#${element.id}">${element.dataset.contentText}</a></li>`);
-    element.querySelector(`b`).title = "Content ↑";
-  });
-  const normalDiv = Object.assign(document.createElement("div"),
-    {classList: `normal top noborder`});
-  normalDiv.append(ul);
-  document.querySelector(`#log2screen li:first-child .normal`)
-    .insertAdjacentElement(`afterend`, normalDiv);
-}
-
 function logExampleCB(example) {
   const fn = example.toString().trim();
   const result = maybe({trial: example, whenError: err => testError(err, fn)});
@@ -155,28 +139,33 @@ function testCounts2Popover() {
     <div><button id="closePopover">Close</button></div>`);
 }
 
+function addContentIndex() {
+  const contentElements = document.querySelectorAll(`[data-content-text]`);
+  const ul = Object.assign(document.createElement("ul"), {classList: `content`});
+  ul.insertAdjacentHTML(`beforeend`, `<li class="head"><h3>Content</h3></li>`);
+  contentElements.forEach(element => {
+    ul.insertAdjacentHTML(`beforeend`,
+      `<li><div data-scrollto="${element.id}">${element.dataset.contentText}</div></li>`);
+    element.querySelector(`b`).title = "Content ↑";
+  });
+  const normalDiv = Object.assign(document.createElement("div"),
+    {classList: `normal top noborder`});
+  normalDiv.append(ul);
+  document.querySelector(`#log2screen li:first-child .normal`)
+    .insertAdjacentElement(`afterend`, normalDiv);
+}
+
 function handle(evt) {
   const filterFailed = evt.target.closest(`#failedOnly`);
   const popoverClose = evt.target.closest(`#testResults`);
   const popoverOpen = evt.target.closest(`#showResults`);
+  const fromContentItem = evt.target.closest(`[data-scrollto]`);
   const toTop = evt.target.closest(`[data-content-text]`) || evt.target.closest(`[data-to-top]`) || evt.target.classList.contains('arrowToTop');
   
   switch(true) {
-    case !!filterFailed:
-      const isFiltered = filterFailed.dataset.filtered === "1";
-      const allOk = document.querySelectorAll(`.ok`);
-      const errors = [...document.querySelectorAll(`.testErr`)];
-      
-      if (errors.length > 0 && !isFiltered) {
-        document.querySelectorAll(`li`).forEach(el => el.classList.add('hidden'));
-        document.querySelector(`[data-bttnblock]`).closest(`li`).classList.remove('hidden');
-        errors.forEach(el => el.closest(`li`).classList.remove('hidden'));
-        return filterFailed.dataset.filtered = "1";
-      }
-      
-      document.querySelectorAll(`.hidden`).forEach(el => el.classList.remove(`hidden`));
-      
-      return filterFailed.dataset.filtered = "0";
+    case !!filterFailed: return filterFailedTests(filterFailed);
+    case !!fromContentItem:
+      return document.querySelector(`#${fromContentItem.dataset.scrollto}`).scrollIntoView({behavior: 'smooth'});
     case !!popoverClose: return popoverClose.hidePopover();
     case !!popoverOpen:
       testCounts2Popover();
@@ -184,6 +173,23 @@ function handle(evt) {
     case !!toTop: return document.querySelector(`.container`).scrollIntoView({behavior: 'smooth'});
     default: return true;
   }
+}
+
+function filterFailedTests(filterFailedElement) {
+  const isFiltered = filterFailedElement.dataset.filtered === "1";
+  const allOk = document.querySelectorAll(`.ok`);
+  const errors = [...document.querySelectorAll(`.testErr`)];
+  
+  if (errors.length > 0 && !isFiltered) {
+    document.querySelectorAll(`li`).forEach(el => el.classList.add('hidden'));
+    document.querySelector(`[data-bttnblock]`).closest(`li`).classList.remove('hidden');
+    errors.forEach(el => el.closest(`li`).classList.remove('hidden'));
+    return filterFailedElement.dataset.filtered = "1";
+  }
+  
+  document.querySelectorAll(`.hidden`).forEach(el => el.classList.remove(`hidden`));
+  
+  return filterFailedElement.dataset.filtered = "0";
 }
 
 function logFactory(formatJSON = true) {
@@ -615,21 +621,30 @@ function getHeaderCodeBlock() {
   return `<code class="block">
     // import & initialize
     import {
-      default as IS, // the main type checking function
-      maybe,         // a try/catch wrapper utility function
-      $Wrap,         // wrapper for any variable
-      isNothing,     // special function for empty stuff (null, NaN etc)
-      xProxy,        /* Object for Proxy implementation. Syntax:
-                        xProxy.custom() => type check for Proxy enabled
-                        xProxy.native() => default: native ES20xx implementation */
+      IS,                    /* the main type checking function */
+      maybe,                 /* a try/catch wrapper utility function */
+      $Wrap,                 /* wrapper method for any variable */
+      isNothing,             /* special function for empty stuff (null, NaN etc) */
+      xProxy,                /* Object for Proxy implementation. Syntax:
+                                xProxy.custom() => type check for Proxy enabled
+                                xProxy.native() => native ES20xx implementation
+                                See Chapter "Proxy 'type'".
+                                Proxy detection is by default enabled.
+                                Invoke [xProxy.native] to disable it. */
+      addSymbolicExtensions  /* The [addSymbolicExtensions] method creates Symbolic
+                                extensions to Object/Object.prototype
+                                (Symbol.is, Symbol.type) enabling checking the type
+                                of 'anything' using [instance][Symbol.is/type].
+                                See chapter "The Object symbolic extension".
+                                Symbolic extensions are by default not initialized. */
     } from "./typeofAnything.js";
     
-    // assign symbols (set from library)
+    // add Symbolic Object extensions. By default this is disabled.
+    addSymbolicExtensions();
+    
+    // assign symbols locally (set from library)
     const is = Symbol.is;
     const type = Symbol.type;
-    
-    // enable Proxy type detection
-    xProxy.custom();
     
     // definitions used in the following examples
     const [tru, flse, zero, not_a_nr, nil, undef, div, div2, nonDiv, proxyEx] =
