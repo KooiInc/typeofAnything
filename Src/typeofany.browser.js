@@ -155,9 +155,9 @@ window.TOAFactory = function TOAFactory(specs = {}) {
 }
 
 function SymbolAndCustomProxyFactory(IS, typeOf, useSymbolicExtension) {
-  return {xProxy: setProxyFactory(), addSymbolicExtensions: addSymbols2Anything};
-  
   if (!Symbol.isSymbol) { Symbol.isSymbol = Symbol.for(`toa.isASymbol`); }
+  
+  return {xProxy: setProxyFactory(), addSymbolicExtensions: addSymbols2Anything};
   
   function addSymbols2Anything() {
     if (!Symbol.is) {
