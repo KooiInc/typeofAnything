@@ -27,10 +27,18 @@ The module is also available from [NPM](https://www.npmjs.com/package/typeofanyt
     *Note*: without a `whenError` parameter, `maybe` returns `undefined` when `trial` fails.
 - `isNothing(input:any[, all: boolean]`: a function to check if input is either `null || undefined`  (`all: false`)
    or `null || undefined || NaN || Infinity` (`all: true`).
-- `xProxy`: in the `typeofAnything` module the native `Proxy` constructor is rewritten, which enables checking if input is  a proxy instance (and its constituting type). xProxy is an Object to enable/disable this. Syntax:
+- `xProxy`: in the `typeofAnything` module the native `Proxy` constructor is rewritten, 
+   which enables checking if input is  a proxy instance (and its constituting type).  
+
+   `xProxy` is an small utility to enable/disable this. Syntax:
    
-   - `xProxy.native()`: use the native ES20xx `Proxy` constructor (disable type checking for proxies - so opt out from module default)
-   - `xProxy.custom()`: use the custom `Proxy` constructor (enable type checking for proxies)
+     - `xProxy.native()`: use the native ES20xx `Proxy` constructor (disable type checking for proxies - so opt out from module default)
+     - `xProxy.custom()`: use the custom `Proxy` constructor (enable type checking for proxies)
+   
+- `addSymbolicExtensions`: a method to add `Symbol` extension methods to check instances of (nearly) anything
+   using Symbols. By default the extensions are not added. Invoking `addSymbolicExtensions` creates `Symbol.is`  
+   and `Symbol.type`. With it one can directly check types, e.g. `"some string"[Symbol.type]` or 
+   `"some string"[Symbol.is](String)`.
 
 For an extensive set of examples see
 the [module demonstration page](https://kooiinc.github.io/typeofAnything/Demo)
@@ -53,6 +61,8 @@ Your script should be of type `module`.
   import {default as IS, $Wrap} from "[install path]/Src/typeofany.module.js";
   const isObject = IS({}, Array, Object);
   const nothing = null;
+  addSymbolicExtensions();
+  const is = Symbol.is;
   const isNothingNull = nothing?.[is](null) || $Wrap(nothing).is(null);
 </script>
 ```
@@ -67,9 +77,11 @@ Subsequently in your script (for example)
 
 ```html
 <script>
-  const {IS, $Wrap} = TOAFactory(); 
+  const {IS, $Wrap} = TOAFactory({useSymbolicExtension: true}); 
   const isObject = IS({}, Array, Object);
   const nothing = null;
+  // because [useSymbolicExtension: true], we can assign Symbol.is to [is]
+  const is = Symbol.is;
   const isNothingNull = nothing?.[is](null) || $Wrap(nothing).is(null); 
   /* ... */
 </script>
