@@ -483,7 +483,7 @@ function retrieveAllTests(variables) {
     _ => test(_ => div[is]({isTypes: HTMLDivElement, notTypes: HTMLUnknownElement}), true),
     _ => test(_ => div[is]({isTypes: [Array, String], notTypes: Node}), false),
     _ => test(_ => div[is]({isTypes: [HTMLElement], notTypes: [Array, String]}), true),
-    _ => test(_ => `Hello`[is]({isTypes: [Object, Array], notTypes: String}), false),
+    _ => test(_ => `Hello`[is]({isTypes:  Array, notTypes: String}), false),
     _ => test(_ => `Hello`[is]({isTypes: Array, defaultValue: `Should be an Array!`}), `Should be an Array!`),
     _ => test(_ => div[is](Node), true),
     _ => test(_ => IS(div, {isTypes: [Node], notTypes: NaN}), true),
@@ -525,59 +525,64 @@ function retrieveAllTests(variables) {
             <div>
               A number of ES20xx Objects contain the 'well known Symbol' <code>Symbol.toStringTag</code>
               in their prototype. Such objects use that Symbol for their string representation (<code>toString</code>).
-              Such 'types' are not always available as known constructors in the (global) namespace
-              (like for example <code>HTMLElement</code> or <code>RegExp</code> are), so one can't always use (for example)
-              <code>IS(new Float32Array(1), Float32Array)</code>).
-              <br>One can check such non-available global constructors using their string representation,
-              <br>e.g. <code>IS(new Float32Array(1), "Float32Array")</code>
+              Sometimes <code>Symbol.toStringTag</code> delivers a more precise type indication, e.g.
+              <code>Iterator.from([1,2,3])[type]</code>, vs <code>new Set([1,2,3]).entries()[type]</code>
               <br><br>See also: <a target="_blank"
                 href="${mdnReferencePrefix}/Global_Objects/Symbol/toStringTag"
                 >MDN documentation</a></div>
             </div>`,
-    _ => test(_ => div[type], `[object HTMLDivElement]`),
-    _ => test(_ => Symbol.for(`is`)[type], `[object Symbol]`),
+    _ => test(_ => ({[Symbol.toStringTag]:  "I am Groot"})[type], `I am Groot`),
+    _ => test(_ => ({[Symbol.toStringTag]:  "I am Object Groot"})[is](Object), true),
+    _ => test(_ => ({[Symbol.toStringTag]:  "Hi! I am Groot"})[is]('Hi! I am Groot'), true),
+    _ => test(_ => Iterator[type], `Iterator`),
+    _ => test(_ => Iterator.from([1,2,3])[type], `Array Iterator`),
+    _ => test(_ => Iterator.from([1,2,3])[is](Iterator), true),
+    _ => test(_ => Iterator.from([1,2,3])[is](Object), true),
+    _ => test(_ => new Set([1,2,3])[type], `Set`),
+    _ => test(_ => new Set([1,2,3]).entries()[type], `Set Iterator`),
+    _ => test(_ => new Set([1,2,3]).entries()[is](Iterator), true),
+    _ => test(_ => div[type], `HTMLDivElement`),
+    _ => test(_ => Symbol.for(`is`)[type], `Symbol`),
     _ => test(_ => Symbol.is[Symbol.is](Symbol /* known global constructor */), true),
-    _ => test(_ => new Intl.Collator()[type], `[object Intl.Collator]`),
+    _ => test(_ => new Intl.Collator()[type], `Intl.Collator`),
     _ => test(_ => new Intl.Collator()[is](Intl.Collator), true),
     _ => test(_ => new Intl.Collator()[is](Object), true),
-    _ => test(_ => new Float32Array(1)[type], `[object Float32Array]`),
+    _ => test(_ => new Float32Array(1)[type], `Float32Array`),
     t => `<div class="normal"><code>TypedArray</code> is not
         <a target="_blank" href="${mdnReferencePrefix}/Global_Objects/TypedArray"
         >a known  global constructor</a></div>`,
     _ => test(_ => new Float32Array(1)[is](TypedArray), false),
-    _ => test(_ => new Float32Array(1)[is](Array, Float32Array), true),
+    _ => test(_ => new Float32Array(1)[type], `Float32Array`),
+    _ => test(_ => new Float32Array(1)[is](Float32Array), true),
     _ => test(_ => new Float32Array(1)[is](`Float32Array`), true),
     _ => test(_ => new Float32Array(1)[is](Object), true),
-    _ => test(_ => new DataView(new ArrayBuffer(2))[type], `[object DataView]`),
-    _ => test(_ => new FinalizationRegistry(_ => {})[type], `[object FinalizationRegistry]`),
+    _ => test(_ => new DataView(new ArrayBuffer(2))[type], `DataView`),
+    _ => test(_ => new FinalizationRegistry(_ => {})[type], `FinalizationRegistry`),
     _ => test(_ => new FinalizationRegistry(_ => {})[is](`FinalizationRegistry`), true),
     _ => test(_ => new FinalizationRegistry(_ => {})[is](FinalizationRegistry), true),
     _ => test(_ => new FinalizationRegistry(_ => {})[is](Function, FinalizationRegistry), true),
     _ => test(_ => new FinalizationRegistry(_ => {})[is](Object), true),
     _ => test(_ => new FinalizationRegistry(_ => {})[is](Function), false),
-    _ => test(_ => Iterator[type], `Function`),
-    _ => test(_ => Iterator.from([1,2,3])[type], `[object Array Iterator]`),
-    _ => test(_ => Iterator.from([1,2,3])[is](Iterator), true),
-    _ => test(_ => Iterator.from([1,2,3])[is](Object), true),
+    
     t => `<div class="normal"><code>SharedArrayBuffer</code> is not available due to missing
         <a target="_blank"
           href="${mdnReferencePrefix}/Global_Objects/SharedArrayBuffer/SharedArrayBuffer#security_requirements"
         >security requirements</a></div>`,
-    _ => test(_ => new SharedArrayBuffer(16)?.[type], `[object SharedArrayBuffer]`),
-    _ => test(_ => Intl[type], `[object Intl]`),
+    _ => test(_ => new SharedArrayBuffer(16)?.[type], `SharedArrayBuffer`),
+    _ => test(_ => Intl[type], `Intl`),
     _ => test(_ => Intl[is](Object), true),
     _ => test(_ => String(Intl)[is](`[object Intl]`), true),
-    _ => test(_ => Intl.Collator[type], `Function`),
+    _ => test(_ => Intl.Collator[type], `Intl.Collator`),
     _ => test(_ => Intl.Collator[is](Function), true),
-    _ => test(_ => new Intl.Collator(`nl`)[type], `[object Intl.Collator]`),
+    _ => test(_ => new Intl.Collator(`nl`)[type], `Intl.Collator`),
     _ => test(_ => new Intl.Collator(`nl`)[is](Object), true),
-    _ => test(_ => JSON[type], `[object JSON]`),
+    _ => test(_ => JSON[type], `JSON`),
     _ => test(_ => JSON[is](Object), true),
-    _ => test(_ => Math[type], `[object Math]`),
-    _ => test(_ => new Promise((a, b) => {})[type], `[object Promise]`),
+    _ => test(_ => Math[type], `Math`),
+    _ => test(_ => new Promise((a, b) => {})[type], `Promise`),
     _ => test(_ => new Promise((a, b) => {})[is](Promise), true),
     _ => test(_ => new Promise((a, b) => {})[is](`Promise`), true),
-    _ => test(_ => function* () {}[type], `[object GeneratorFunction]`),
+    _ => test(_ => function* () {}[type], `GeneratorFunction`),
     _ => test(_ => function* () {}[is](Function), true),
     _ => test(_ => function* () {}[is](`GeneratorFunction`), true),
     
@@ -594,9 +599,9 @@ function retrieveAllTests(variables) {
     _ => test(_ => new SomeCTOR("yada")[type], `SomeCTOR`),
     _ => test(_ => new SomeCTOR("yada")[is](SomeCTOR), true),
     _ => test(_ => new SomeCTOR("yada")[is](Object /* up the prototype chain */), true),
-    _ => test(_ => Symbol(`me`)[type], `[object Symbol]`),
+    _ => test(_ => Symbol(`me`)[type], `Symbol`),
     _ => test(_ => Symbol(`me`)[is](Symbol), true),
-    _ => test(_ => nonDiv[type], `[object HTMLUnknownElement]`),
+    _ => test(_ => nonDiv[type], `HTMLUnknownElement`),
     _ => test(_ => nonDiv[is](HTMLUnknownElement), true),
     _ => test(_ => div[is](Node), true),
     _ => test(_ => div[is](HTMLElement), true),
