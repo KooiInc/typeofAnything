@@ -1,5 +1,5 @@
 body {
-  font: 14px / 18px system-ui, sans-serif;
+  font: 12px / 16px system-ui, sans-serif;
   margin: 1rem;
 
   h3 {
@@ -49,12 +49,14 @@ body {
 
   [data-content-text] {
     scroll-margin-top: 1em;
+    scroll-behavior: smooth;
   }
 
   .container {
     inset: 0;
     position: absolute;
     padding-bottom: 50rem;
+    scroll-behavior: smooth;
 
     & [popover] {
       box-shadow: 2px 2px 8px #999;

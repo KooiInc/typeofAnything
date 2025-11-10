@@ -165,12 +165,12 @@ function handle(evt) {
   switch(true) {
     case !!filterFailed: return filterFailedTests(filterFailed);
     case !!fromContentItem:
-      return document.querySelector(`#${fromContentItem.dataset.scrollto}`).scrollIntoView({behavior: 'smooth'});
+      return document.querySelector(`#${fromContentItem.dataset.scrollto}`).scrollIntoView();
     case !!popoverClose: return popoverClose.hidePopover();
     case !!popoverOpen:
       testCounts2Popover();
       return resultBox.showPopover();
-    case !!toTop: return document.querySelector(`.container`).scrollIntoView({behavior: 'smooth'});
+    case !!toTop: return document.querySelector(`.container`).scrollIntoView();
     default: return true;
   }
 }
