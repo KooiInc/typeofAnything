@@ -1,5 +1,5 @@
 body {
-  font: 12px / 16px system-ui, sans-serif;
+  font: normal 12px / 16px system-ui, sans-serif;
   margin: 1rem;
 
   h3 {
@@ -74,7 +74,6 @@ body {
         margin: 1rem 0 0 -1rem;
         li {
           margin-top: 0.2rem;
-          font: revert;
           padding: 0 5px;
           list-style: "✓";
 
@@ -133,7 +132,6 @@ body {
 
       li {
         margin-top: 0.1rem;
-        font: revert;
         font-size: 1.1em;
         line-height: 1.6rem;
         padding: 0 5px;
@@ -149,7 +147,6 @@ body {
           margin: 0;
           li {
             margin-top: 0.1rem;
-            font: revert;
             padding: 0 5px;
             margin-left: -1.2rem;
 
