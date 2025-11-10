@@ -53,7 +53,7 @@ function positionToTopArrow() {
 
 function getHeader() {
   document.querySelector(`.container`)
-    .insertAdjacentHTML(`afterbegin`, `<div class="arrowToTop" title="Content ↑"></div>`);
+    .insertAdjacentHTML(`afterbegin`, `<div class="arrowToTop" data-to-top="1" title="Content ↑"></div>`);
   const backLink = /github\.io|localhost/i.test(location.href)
     ? `<a target="_top" href="https://github.com/KooiInc/typeofAnything">Back to repository</a>`
     : `<a target="_top" href="https://stackblitz.com/@KooiInc">All projects</a>`;
@@ -160,7 +160,8 @@ function handle(evt) {
   const popoverClose = evt.target.closest(`#testResults`);
   const popoverOpen = evt.target.closest(`#showResults`);
   const fromContentItem = evt.target.closest(`[data-scrollto]`);
-  const toTop = evt.target.closest(`[data-content-text]`) || evt.target.closest(`[data-to-top]`) || evt.target.classList.contains('arrowToTop');
+  const toTop = evt.target.closest(`[data-content-text]`) ||
+    evt.target.closest(`[data-to-top]`);
   
   switch(true) {
     case !!filterFailed: return filterFailedTests(filterFailed);
@@ -170,7 +171,7 @@ function handle(evt) {
     case !!popoverOpen:
       testCounts2Popover();
       return resultBox.showPopover();
-    case !!toTop: return document.querySelector(`.container`).scrollIntoView();
+    case !!toTop: return document.querySelector(`.container`).scrollTop = 0;
     default: return true;
   }
 }

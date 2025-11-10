@@ -49,16 +49,16 @@ body {
 
   [data-content-text] {
     scroll-margin-top: 1em;
-    scroll-behavior: smooth;
   }
 
   .container {
     inset: 0;
     position: absolute;
     padding-bottom: 50rem;
+    overflow-y: auto;
     scroll-behavior: smooth;
 
-    & [popover] {
+    div[popover] {
       box-shadow: 2px 2px 8px #999;
       padding: 2rem;
       border-color: white;
