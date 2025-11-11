@@ -65,13 +65,14 @@ function getHeader() {
       <br><b>Note</b> Every example doubles as <i><b>test</b></i> for the given code.
       The 'received' value is the result of the executed code. Two tests of all examples
       always fail by design.
-    </div>
-    <div class="normal noborder"><h3>Code used for examples</h3></div>
-    ${getHeaderCodeBlock()}`,
-    `!!<div class="normal center noborder" data-bttnblock="true">
+      <div class="center noborder" data-bttnblock="true">
         <button id="showResults">Test counts</button>
         <button id="failedOnly" data-filtered="0"></button>
-       </div>`];
+       </div>
+    </div>`,
+    `<div class="noborder"><h3>Code used for examples</h3></div>
+    ${getHeaderCodeBlock()}`,
+  ];
 }
 
 function test(testFn, expected) {
@@ -552,7 +553,7 @@ function retrieveAllTests(variables) {
     t => `<div class="normal"><code>TypedArray</code> is not
         <a target="_blank" href="${mdnReferencePrefix}/Global_Objects/TypedArray"
         >a known  global constructor</a></div>`,
-    _ => test(_ => new Float32Array(1)[is](TypedArray), false),
+    _ => test(_ => /* fail by design */ new Float32Array(1)[is](TypedArray), false),
     _ => test(_ => new Float32Array(1)[type], `Float32Array`),
     _ => test(_ => new Float32Array(1)[is](Float32Array), true),
     _ => test(_ => new Float32Array(1)[is](`Float32Array`), true),
@@ -569,7 +570,7 @@ function retrieveAllTests(variables) {
         <a target="_blank"
           href="${mdnReferencePrefix}/Global_Objects/SharedArrayBuffer/SharedArrayBuffer#security_requirements"
         >security requirements</a></div>`,
-    _ => test(_ => new SharedArrayBuffer(16)?.[type], `SharedArrayBuffer`),
+    _ => test(_ => /* fail by design */ new SharedArrayBuffer(16)?.[type], `SharedArrayBuffer`),
     _ => test(_ => Intl[type], `Intl`),
     _ => test(_ => Intl[is](Object), true),
     _ => test(_ => String(Intl)[is](`[object Intl]`), true),

@@ -51,6 +51,11 @@ body {
     scroll-margin-top: 1em;
   }
 
+  [data-bttnblock] {
+    padding-bottom: 0.4rem;
+    margin-top: -1rem;
+  }
+
   .container {
     inset: 0;
     position: absolute;
