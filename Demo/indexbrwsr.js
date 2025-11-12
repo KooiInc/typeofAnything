@@ -16,13 +16,12 @@ printExamples();
 document.querySelectorAll(`code.block`)
   .forEach(block => {
     block.classList.remove(`block`);
-    block.classList.add(`language-javascript`, `line-numbers`);
     const div = block.closest(`div`);
-    div.append(Object.assign(document.createElement(`pre`), {classList: "line-numbers language-javascript"}))
+    div.append(Object.assign(document.createElement(`pre`), {classList: "hljscode"}))
     div.querySelector(`pre`).append(block);
   });
 
-Prism.highlightAll();
+hljs.highlightAll(`javascript`);
 
 function printExamples() {
   document.addEventListener(`click`, handle);
@@ -68,15 +67,17 @@ function getHeader() {
         <button id="failedOnly" data-filtered="0"></button>
        </div>
     </div>`,
-    `<div class="noborder"><h3>Code used for examples</h3></div>
-    ${getHeaderCodeBlock()}`,
+    `<details open><summary><b>Code used in examples/tests</b></summary>
+      <div>${getHeaderCodeBlock()}</div></details>`,
   ];
 }
 
 function test(testFn, expected) {
-  const fnStr = testFn.toString().trim();
+  const fnStr = testFn.prefix
+    ? testFn.fn.toString().trim()
+    : testFn.toString().trim();
   
-  let result = maybe({trial: testFn, whenError: err => testError(err, fnStr)});
+  let result = maybe({trial: testFn.fn || testFn, whenError: err => testError(err, fnStr)});
   if (result === `FAIL`) { failed += 1; return; }
   
   expected = IS(expected, HTMLElement)
@@ -91,11 +92,13 @@ function test(testFn, expected) {
   const resultStr = `(expected <i>${expected}</i>, received <i>${result}</i>)`;
   
   if (result ===  expected) {
-    return log(`<div class="ok">${toCode(fnStr.slice(4), result)}
+    return log(`<div class="ok">${(testFn.prefix ? `<div class="normal">${
+        toCode(testFn.prefix)}</div>` : ``) + toCode(fnStr.slice(4), result)}
       <div class="testResult"><b>=> OK</b> ${resultStr}</div></div>`);
   }
   
-  return log(`<div class="testErr">${toCode(fnStr.slice(4))}
+  return log(`<div class="testErr">${(testFn.prefix ? `<div class="normal">${
+      toCode(testFn.prefix)}</div>` : ``) + toCode(fnStr.slice(4), result)}
     <div class="testResult"><b>=> NOT OK</b> ${resultStr}</></div>`);
 }
 
@@ -240,8 +243,35 @@ function tryJSON(content, formatted) {
   });
 }
 
+function FixedArrayCTOR(len) {
+  let values = [];
+  const inner = {
+    maxLen: len,
+    get values() {
+      return values;
+    },
+    set values(values2Set) {
+      values = !Array.isArray(values2Set) ? [values2Set] : values2Set;
+    },
+    valueOf() {
+      return values.filter(v =>
+        typeof v !== `string` && !Number.isNaN(+v)).slice(0, this.maxLen);
+    },
+    [Symbol.toStringTag]: `FixedArrayCTOR`,
+  };
+  
+  Object.defineProperties(inner, {
+    constructor : { get: function() { return FixedArrayCTOR; }, prototype: { get: function() { return FixedArrayCTOR; } } }
+  });
+  return inner;
+}
+
 function retrieveAllTests(variables) {
   const [tru, flse, zero, not_a_nr, nil, undef, div, div2, nonDiv, proxyEx, SomeCTOR] = variables;
+  const IntArray = FixedLenIntArrayFactory();
+  const max5Ints = IntArray(5).setValues(1, 2, 2.5, 42, `hello`);
+  const max5IntsTest = [40, 40.5, 41, 41.5, 42];
+  
   return [
     t => `<div class="normal" id="IS" data-content-text="The IS function"><b>The IS function</b></div>`,
     _ => test(_ => IS([]), `Array`),
@@ -256,6 +286,11 @@ function retrieveAllTests(variables) {
     _ => test(_ => IS(not_a_nr, NaN), true),
     _ => test(_ => IS(1/0, Infinity), true),
     _ => test(_ => IS(flse), `Boolean`),
+    _ => test(_ => IS(max5Ints, Object), true),
+    _ => test(_ => IS(max5Ints, Array), true),
+    _ => test(_ => IS(max5Ints, IntArray), true),
+    _ => test(_ => IS(max5Ints, String, RegExp, FixedLenIntArrayFactory), false),
+    
     t => `<div class="normal">ECMAScript peculiarities
         (<a target="_blank" href="https://2ality.com/2012/01/object-plus-object.html"
         >why?</a>)</div>`,
@@ -275,6 +310,7 @@ function retrieveAllTests(variables) {
     _ => test(_ => `Hello World`[is](String), true),
     _ => test(_ => `Hello World`[is](Object), false),
     _ => test(_ => new String(`Hello World`)[is](Object), true),
+    _ => test(_ => new String(`Hello World`)[is](String), true),
     
     t => `<div class="normal"><b>Note</b>: one can also use <code>Symbol.type/Symbol.is</code> directly</div>`,
     _ => test(_ => [][Symbol.type], `Array`),
@@ -480,8 +516,15 @@ function retrieveAllTests(variables) {
               </li>
             </ul>
           </div>`,
-    _ => test(_ => div[is]({isTypes: HTMLDivElement, notTypes: HTMLUnknownElement}), true),
-    _ => test(_ => div[is]({isTypes: [Array, String], notTypes: Node}), false),
+    _ => test(_ => max5Ints[is]({isTypes: IntArray, notTypes: Array}), false),
+    _ => test(_ => [40, 41, 42][is]({isTypes: Array, notTypes: IntArray}), true),
+    _ => test({
+          prefix: `const max5IntsTest = [40, 40.5, 41, 41.5, 42];`,
+          fn: _ => max5IntsTest[is]({isTypes: IntArray, defaultValue: IntArray(5).setValues(...max5IntsTest).values })
+        }, [40,41,42]),
+    _ => test(_ => [40, 41, 42][is]({isTypes: IntArray, defaultValue: max5Ints.values}), [1,2,42]),
+    _ => test(_ => div[is]({isTypes: HTMLElement, notTypes: HTMLUnknownElement}), true),
+    _ => test(_ => div[is]({isTypes: [Node], notTypes: HTMLElement}), false),
     _ => test(_ => div[is]({isTypes: [HTMLElement], notTypes: [Array, String]}), true),
     _ => test(_ => `Hello`[is]({isTypes:  Array, notTypes: String}), false),
     _ => test(_ => `Hello`[is]({isTypes: Array, defaultValue: `Should be an Array!`}), `Should be an Array!`),
@@ -621,51 +664,36 @@ function someProxy() {
   });
 }
 
+function FixedLenIntArrayFactory() {
+  function restrain(values, maxLen) {
+    return values.filter(v =>
+      typeof v !== `string` && !Number.isNaN(+v) && Number.isInteger(+v)).slice(0, maxLen);
+  }
+  
+  return function CTOR(maxLen) {
+    let values = [];
+    const instance = {};
+    
+    Object.defineProperties(instance, {
+      maxLen: { value: maxLen },
+      length: { get() { return values.length; }  },
+      rawValues: { get() { return values; } },
+      values: { get() { return restrain(values, instance.maxLen); } },
+      setValues: { value: function(...values2Set) { values = values2Set; return instance; } },
+      valueOf: { get() { return restrain(values, instance.maxLen); } },
+      constructor: { get() { return CTOR; } },
+      toString: { value() { return `[${restrain(values, instance.maxLen)}]`; }  },
+    });
+    
+    Object.setPrototypeOf(instance, Array.prototype);
+    
+    return Object.freeze(instance);
+  };
+}
+
 // ---
 function getHeaderCodeBlock() {
-  return `<code class="block">
-    // initialize (TOAFactory is delivered from script (see document source))
-      const {
-        IS,                    /* the main type checking function */
-        maybe,                 /* a try/catch wrapper utility function */
-        $Wrap,                 /* wrapper method for any variable */
-        isNothing,             /* special function for empty stuff (null, NaN etc) */
-        xProxy,                /* Object for Proxy implementation. Syntax:
-                                  xProxy.custom() => type check for Proxy enabled
-                                  xProxy.native() => native ES20xx implementation
-                                  See Chapter "Proxy 'type'".
-                                  Proxy detection is by default enabled.
-                                  Invoke [xProxy.native] to disable it. */
-        addSymbolicExtensions  /* The [addSymbolicExtensions] method creates Symbolic
-                                  extensions to Object/Object.prototype
-                                  (Symbol.is, Symbol.type) enabling checking the type
-                                  of 'anything' using [instance][Symbol.is/type].
-                                  See chapter "The Object symbolic extension".
-                                  Symbolic extensions are by default not initialized.
-                                  Invoking [TOAFactory] with {useSymbolicExtensions: true}
-                                  initializes them. */
-      } = TOAFactory({useSymbolicExtensions: true});
-    
-    // assign symbols (set from library)
-    const is = Symbol.is;
-    const type = Symbol.type;
-    
-    // definitions used in the following examples
-    const [tru, flse, zero, not_a_nr, nil, undef, div, div2, nonDiv, proxyEx] =
-      [ true, false, 0, +("NaN"), null, undefined,
-      Object.assign(document.createElement("div"), {textContent: "I am div"}),
-      Object.assign(document.createElement("div"), {textContent: "I am div 2"}),
-      document.createElement("unknown"),
-      someProxy() ];
-    
-    // a constructor
-    function SomeCTOR(something) {
-      this.something = something;
-    }
-    // a proxy
-    function someProxy() {
-      return new Proxy(new String("hello"), {
-        get(obj, key) { return key === 'world' ? (obj += " world") && obj : obj[key] }
-      });
-    }</code>`.replace(/\n {4}/g, `\n`);
+  return `<code class="block">` +
+    document.querySelector(`#codeblock`).content.querySelector(`div`)
+      .textContent.replace(/^ {4}/mg, ``).trim() + `</code>`;
 }

@@ -106,6 +106,30 @@ body {
       margin: 1px 0;
     }
 
+    details {
+      summary {
+        cursor: pointer;
+        color: rgb(69, 104, 161);
+      }
+
+    }
+
+    pre.hljscode {
+      line-height: 1.4em;
+      margin-top: 0.3em;
+      border: 1px solid transparent;
+      border-radius: 5px;
+      box-shadow: 1px -1px 12px #999;
+      max-height: 600px;
+      overflow: auto;
+
+      code {
+        background-color: #fffffB;
+        .hljs-comment { color: #777; }
+      }
+
+    }
+
     .arrowToTop {
       z-index: 10;
       cursor: pointer;

@@ -6,13 +6,95 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link href="./KooiInc.png" rel="icon">
   <link rel="stylesheet" href="./style.css"/>
-  <link rel="stylesheet" href="./prism.min.css"/>
-  <script src="./prism.min.js"></script>
+  <link rel="stylesheet" href="./githb.css">
+  <script src="./highlight.min.js"></script>
+  <script src="javascript.min.js"></script>
   <script type="module" src="./index.js"></script>
 </head>
 <body>
 <div class="container">
   <ul id="log2screen"></ul>
 </div>
+<template id="codeblock">
+  <div>
+    // import & initialize
+    import {
+      IS,                    /* the main type checking function */
+      maybe,                 /* a try/catch wrapper utility function */
+      $Wrap,                 /* wrapper method for any variable */
+      isNothing,             /* special function for empty stuff (null, NaN etc) */
+      xProxy,                /* Object for Proxy implementation. Syntax:
+                                xProxy.custom() => type check for Proxy enabled
+                                xProxy.native() => native ES20xx implementation
+                                See Chapter "Proxy 'type'".
+                                Proxy detection is by default enabled.
+                                Invoke [xProxy.native] to disable it. */
+      addSymbolicExtensions  /* The [addSymbolicExtensions] method creates Symbolic
+                                extensions to Object/Object.prototype
+                                (Symbol.is, Symbol.type) enabling checking the type
+                                of 'anything' using [instance][Symbol.is/type].
+                                See chapter "The Object symbolic extension".
+                                Symbolic extensions are by default not initialized. */
+    } from "./typeofAnything.js";
+
+    // add Symbolic Object extensions. By default this is disabled.
+    addSymbolicExtensions();
+
+    // assign symbols locally (set from library)
+    const is = Symbol.is;
+    const type = Symbol.type;
+
+    // definitions used in the following examples
+    const [tru, flse, zero, not_a_nr, nil, undef, div, div2, nonDiv, proxyEx] =
+      [ true, false, 0, +("NaN"), null, undefined,
+      Object.assign(document.createElement("div"), {textContent: "I am div"}),
+      Object.assign(document.createElement("div"), {textContent: "I am div 2"}),
+      document.createElement("unknown"),
+      someProxy() ];
+
+    // a constructor
+    function SomeCTOR(something) {
+      this.something = something;
+    }
+
+    // a proxy
+    function someProxy() {
+      return new Proxy(new String("hello"), {
+        get(obj, key) { return key === 'world' ? (obj += " world") && obj : obj[key] }
+      });
+    }
+
+    // a Classfree Object Oriented constructor
+    const IntArray = FixedLenIntArrayFactory();
+    const max5Ints = IntArray(5).setValues(1, 2, 2.5, 42, `hello`);
+
+    function FixedLenIntArrayFactory() {
+      function restrain(values, maxLen) {
+        return values.filter(v =>
+          typeof v !== `string` && !Number.isNaN(+v) && +v % 1 === 0).slice(0, maxLen);
+      }
+
+      return function CTOR(maxLen) {
+        let values = [];
+        const instance = {};
+
+        Object.defineProperties(instance, {
+          maxLen: { value: maxLen },
+          length: { get() { return values.length; }  },
+          rawValues: { get() { return values; } },
+          values: { get() { return restrain(values, instance.maxLen); } },
+          setValues: { value: function(...values2Set) { values = values2Set; return instance; } },
+          valueOf: { get() { return restrain(values, instance.maxLen); } },
+          constructor: { get() { return CTOR; } },
+          toString: { value() { return `[${restrain(values, instance.maxLen)}]`; }  },
+        });
+
+        Object.setPrototypeOf(instance, Array.prototype);
+
+        return Object.freeze(instance);
+      }
+    }
+  </div>
+</template>
 </body>
 </html>

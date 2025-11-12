@@ -6,15 +6,87 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link href="./KooiInc.png" rel="icon">
   <link rel="stylesheet" href="./style.css"/>
-  <link rel="stylesheet" href="./prism.min.css"/>
-  <script src="./prism.min.js"></script>
-<!--  <script src="../Dist/toa.browser.min.js"></script>-->
+  <link rel="stylesheet" href="./githb.css">
+  <script src="./highlight.min.js"></script>
+  <script src="javascript.min.js"></script>
   <script src="../Src/typeofany.browser.js"></script>
 </head>
 <body>
 <div class="container">
   <ul id="log2screen"></ul>
 </div>
+<template id="codeblock">
+  <div>
+    // initialize (TOAFactory is delivered from script (see document source))
+    const {
+      IS,                    /* the main type checking function */
+      maybe,                 /* a try/catch wrapper utility function */
+      $Wrap,                 /* wrapper method for any variable */
+      isNothing,             /* special function for empty stuff (null, NaN etc) */
+      xProxy,                /* Object for Proxy implementation. Syntax:
+                                xProxy.custom() => type check for Proxy enabled
+                                xProxy.native() => native ES20xx implementation
+                                See Chapter "Proxy 'type'".
+                                Proxy detection is by default enabled.
+                                Invoke [xProxy.native] to disable it. */
+    } = TOAFactory({useSymbolicExtensions: true});
+
+    // assign symbols (set from library)
+    const is = Symbol.is;
+    const type = Symbol.type;
+
+    // definitions used in the following examples
+    const [tru, flse, zero, not_a_nr, nil, undef, div, div2, nonDiv, proxyEx] =
+      [ true, false, 0, +("NaN"), null, undefined,
+      Object.assign(document.createElement("div"), {textContent: "I am div"}),
+      Object.assign(document.createElement("div"), {textContent: "I am div 2"}),
+      document.createElement("unknown"),
+      someProxy() ];
+
+    // a Classfree Object Oriented constructor
+    const IntArray = FixedLenIntArrayFactory();
+    const max5Ints = IntArray(5).setValues(1, 2, 2.5, 42, `hello`);
+
+    function FixedLenIntArrayFactory() {
+      function restrain(values, maxLen) {
+        return values.filter(v =>
+          typeof v !== `string` && !Number.isNaN(+v) && +v % 1 === 0).slice(0, maxLen);
+      }
+
+      return function CTOR(maxLen) {
+        let values = [];
+        const instance = {};
+
+        Object.defineProperties(instance, {
+          maxLen: { value: maxLen },
+          length: { get() { return values.length; }  },
+          rawValues: { get() { return values; } },
+          values: { get() { return restrain(values, instance.maxLen); } },
+          setValues: { value: function(...values2Set) { values = values2Set; return instance; } },
+          valueOf: { get() { return restrain(values, instance.maxLen); } },
+          constructor: { get() { return CTOR; } },
+          toString: { value() { return `[${restrain(values, instance.maxLen)}]`; }  },
+        });
+
+        Object.setPrototypeOf(instance, Array.prototype);
+
+        return Object.freeze(instance);
+      }
+    }
+
+    // a constructor
+    function SomeCTOR(something) {
+      this.something = something;
+    }
+
+    // a proxy
+    function someProxy() {
+      return new Proxy(new String("hello"), {
+        get(obj, key) { return key === 'world' ? (obj += " world") && obj : obj[key] }
+      });
+    }
+  </div>
+</template>
 <script src="./indexbrwsr.js"></script>
 </body>
 </html>
