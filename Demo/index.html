@@ -52,20 +52,8 @@
       document.createElement("unknown"),
       someProxy() ];
 
-    // a constructor
-    function SomeCTOR(something) {
-      this.something = something;
-    }
-
-    // a proxy
-    function someProxy() {
-      return new Proxy(new String("hello"), {
-        get(obj, key) { return key === 'world' ? (obj += " world") && obj : obj[key] }
-      });
-    }
-
     // a Classfree Object Oriented constructor
-    const IntArray = FixedLenIntArrayFactory();
+    const IntArray = FixedLenIntArrayFactory(); // this creates the 'type' IntArray
     const max5Ints = IntArray(5).setValues(1, 2, 2.5, 42, `hello`);
 
     function FixedLenIntArrayFactory() {
@@ -93,6 +81,18 @@
 
         return Object.freeze(instance);
       }
+    }
+
+    // a constructor
+    function SomeCTOR(something) {
+      this.something = something;
+    }
+
+    // a proxy
+    function someProxy() {
+      return new Proxy(new String("hello"), {
+        get(obj, key) { return key === 'world' ? (obj += " world") && obj : obj[key] }
+      });
     }
   </div>
 </template>
