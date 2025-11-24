@@ -5,6 +5,7 @@ import { default as IS, maybe, $Wrap, isNothing, xProxy, addSymbolicExtensions }
 addSymbolicExtensions();
 const is = Symbol.is;
 const type = Symbol.type;
+xProxy.custom();
 const otherDemoLink = `<a target="_top" href="./index-brwsr.html">Browser script version</a>`;
 
 // -----------------------------------
@@ -111,6 +112,13 @@ function codeExamples() {
     document.createElement("unknown"),
     someProxy(), SomeCTOR];
   log(...getHeader());
+  const insertPositions = Object.freeze( new Proxy({
+    start: "afterbegin", afterbegin: "afterbegin",
+    end: "beforeend", beforeend: "beforeend",
+    before: "beforebegin", beforebegin: "beforebegin",
+    after: "afterend", afterend: "afterend" }, {
+    get(obj, key) { return obj[String(key).toLowerCase()] ?? obj[key]; }
+  }));
   
   return retrieveAllTests(testVariables);
 }

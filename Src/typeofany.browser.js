@@ -3,7 +3,6 @@ window.TOAFactory = function TOAFactory(specs = {}) {
   const { useSymbolicExtensions } = specs;
   const { shouldbeIsSingleObject, ISOneOf, isExcept, verifyNothingness, xProxy,
           determineType, addSymbolicExtensions, maybe, $Wrap } = TOAHelpers(IS, useSymbolicExtensions);
-  xProxy.custom();
   
   if (!!useSymbolicExtensions) { addSymbolicExtensions(); }
   
