@@ -4,6 +4,7 @@ addSymbolicExtensions();
 const is = Symbol.is;
 const type = Symbol.type;
 const otherDemoLink = `<a target="_top" href="./index.html">Module script version</a>`;
+xProxy.custom();
 
 // -----------------------------------
 const {log} = logFactory();
@@ -659,17 +660,9 @@ function SomeCTOR(something) {
 }
 
 function someProxy() {
-  return insertPositions = Object.freeze( new Proxy({
-    start: "afterbegin", afterbegin: "afterbegin",
-    end: "beforeend", beforeend: "beforeend",
-    before: "beforebegin", beforebegin: "beforebegin",
-    after: "afterend", afterend: "afterend" }, {
-    get(obj, key) { return obj[String(key).toLowerCase()] ?? obj[key]; }
-  }));
-  
-  // return new Proxy(new String(`hello`), {
-  //   get(obj, key) { return key === 'world' ? ((obj += " world"), obj) : obj[key] }
-  // });
+  return new Proxy(new String(`hello`), {
+    get(obj, key) { return key === 'world' ? ((obj += " world"), obj) : obj[key] }
+  });
 }
 
 function FixedLenIntArrayFactory() {
