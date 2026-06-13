@@ -13,7 +13,7 @@ The module is also available from [NPM](https://www.npmjs.com/package/typeofanyt
 
    `[imported default function](input, [...type] | {...})`
 
-    *Note*: for the `{...}` parameter, see the [demonstration page](https://kooiinc.github.io/typeofAnything/Demo)
+    *Note*: for the `{...}` parameter, see the [demonstration/test page](https://kooiinc.github.io/typeofAnything/Demo)
 
 - `$Wrap`: a function that wraps input and returns an Object with keys:
    - `value`: the input value (can also be `undefined`, `null`, `NaN` or `Infinity`) 
